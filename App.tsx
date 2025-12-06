@@ -3,9 +3,9 @@ import { Lock, Unlock, X } from 'lucide-react';
 import { Hero } from './components/Hero';
 import { Brands } from './components/Brands';
 import { LogoGallery } from './components/LogoGallery';
-import { VideoGallery } from './components/VideoGallery';
 import { Resume } from './components/Resume';
 import { FloatingWhatsApp } from './components/FloatingWhatsApp';
+import { Contact } from './components/Contact';
 import { Experience, Education, Skill } from './types';
 
 const App: React.FC = () => {
@@ -38,109 +38,111 @@ const App: React.FC = () => {
     // Normalize input: remove spaces and convert to lowercase for better UX
     const normalizedInput = passwordInput.trim().toLowerCase();
 
-    if (normalizedInput === "ladyadmin") {
+    if (normalizedInput === "admin") {
       setIsAdmin(true);
       sessionStorage.setItem('isAdmin', 'true');
       setShowLoginModal(false);
     } else {
-      setLoginError('Contraseña incorrecta. Intenta con: ladyadmin');
+      setLoginError('Contraseña incorrecta. Intenta con: admin');
     }
   };
 
-  // Lady Mosquera's Resume Data - Default values
+  // Developer's Resume Data - Default values
   const defaultExperiences: Experience[] = [
     {
       id: '1',
-      role: 'Content Creator & Editora de Video',
-      company: 'Freelance',
-      period: '2022 - Presente',
-      description: 'Creación de contenido viral para TikTok e Instagram. Edición dinámica de Reels, corrección de color y diseño de miniaturas atractivas para YouTube.'
+      role: 'Senior Full Stack Developer',
+      company: 'Freelance / Clientes USA & LatAm',
+      period: 'Jul 2024 - Presente',
+      description: 'Delivery end-to-end de productos web con Next.js 14, React y Tailwind; APIs en Node.js/Express con PostgreSQL y Redis; CI/CD en GitHub Actions y despliegue en Vercel/Docker. Integración de Google Ads API para campañas programáticas. Mentoría a devs junior y definición de arquitectura.'
     },
     {
       id: '2',
-      role: 'Diseñadora Gráfica para Redes',
-      company: 'Agencia Digital Creative',
-      period: '2020 - 2022',
-      description: 'Diseño de parrillas de contenido para Instagram y Facebook. Creación de identidad visual para marcas de moda y belleza.'
+      role: 'Full Stack Engineer',
+      company: 'SaaS B2B de analítica',
+      period: 'Ene 2024 - Jun 2024',
+      description: 'Construí dashboards en React/TypeScript y APIs en NestJS con PostgreSQL + Prisma. Implementé autenticación con JWT/OAuth, colas con BullMQ y observabilidad con logs y métricas. Reduje tiempos de respuesta de 900ms a 250ms.'
     },
     {
       id: '3',
-      role: 'Asistente de Producción Audiovisual',
-      company: 'Studio Visual Pro',
-      period: '2019 - 2020',
-      description: 'Apoyo en grabación, iluminación y postproducción de videos corporativos y comerciales.'
+      role: 'Frontend Developer',
+      company: 'Agencia digital',
+      period: '2023',
+      description: 'Maquetación y performance para landing pages y micrositios en React y Next.js. SEO técnico, accesibilidad y optimización de Core Web Vitals. Integraciones con CMS headless y APIs de pago.'
     }
   ];
 
   const defaultEducation: Education[] = [
     {
       id: '1',
-      degree: 'Diseño Gráfico Publicitario',
-      institution: 'Instituto de Artes Visuales',
+      degree: 'Ingeniería en Sistemas/Informática',
+      institution: 'Universidad Nacional',
       year: '2019'
     },
     {
       id: '2',
-      degree: 'Curso Avanzado de Adobe Premiere & After Effects',
-      institution: 'Crehana',
+      degree: 'Full Stack Web Development',
+      institution: 'Udemy / Codecademy',
       year: '2021'
     }
   ];
 
   const defaultSkills: Skill[] = [
-    { name: 'Adobe Premiere Pro', level: 90 },
-    { name: 'Adobe Photoshop', level: 95 },
-    { name: 'After Effects', level: 80 },
-    { name: 'CapCut / VN', level: 95 },
-    { name: 'Canva Pro', level: 100 },
-    { name: 'Illustrator', level: 85 }
+    { name: 'React / Next.js', level: 95 },
+    { name: 'TypeScript', level: 90 },
+    { name: 'Node.js / Express', level: 90 },
+    { name: 'PostgreSQL / MongoDB', level: 85 },
+    { name: 'AWS / Cloud', level: 80 },
+    { name: 'Docker / Kubernetes', level: 75 },
+    { name: 'Git / GitHub', level: 95 },
+    { name: 'REST APIs / GraphQL', level: 90 }
   ];
 
   // State for resume data
   const [experiences, setExperiences] = useState<Experience[]>(() => {
-    const saved = localStorage.getItem('lady_portfolio_experiences');
+    const saved = localStorage.getItem('dev_portfolio_experiences');
     return saved ? JSON.parse(saved) : defaultExperiences;
   });
 
   const [education, setEducation] = useState<Education[]>(() => {
-    const saved = localStorage.getItem('lady_portfolio_education');
+    const saved = localStorage.getItem('dev_portfolio_education');
     return saved ? JSON.parse(saved) : defaultEducation;
   });
 
   const [skills, setSkills] = useState<Skill[]>(() => {
-    const saved = localStorage.getItem('lady_portfolio_skills');
+    const saved = localStorage.getItem('dev_portfolio_skills');
     return saved ? JSON.parse(saved) : defaultSkills;
   });
 
   // Update handlers
   const updateExperiences = (newExperiences: Experience[]) => {
     setExperiences(newExperiences);
-    localStorage.setItem('lady_portfolio_experiences', JSON.stringify(newExperiences));
+    localStorage.setItem('dev_portfolio_experiences', JSON.stringify(newExperiences));
   };
 
   const updateEducation = (newEducation: Education[]) => {
     setEducation(newEducation);
-    localStorage.setItem('lady_portfolio_education', JSON.stringify(newEducation));
+    localStorage.setItem('dev_portfolio_education', JSON.stringify(newEducation));
   };
 
   const updateSkills = (newSkills: Skill[]) => {
     setSkills(newSkills);
-    localStorage.setItem('lady_portfolio_skills', JSON.stringify(newSkills));
+    localStorage.setItem('dev_portfolio_skills', JSON.stringify(newSkills));
   };
 
-  const ownerName = "Lady Mosquera";
+  const ownerName = "Alex";
 
   return (
-    <div className="font-sans antialiased text-slate-800 bg-slate-50 selection:bg-pink-200 selection:text-pink-900">
+    <div className="font-sans antialiased text-slate-800 bg-slate-50 selection:bg-blue-200 selection:text-blue-900">
       <Hero isAdmin={isAdmin} />
 
-      {/* Brands Section */}
+      {/* Stack Tecnológico Section */}
       <Brands isAdmin={isAdmin} />
 
-      {/* Pass isAdmin prop to galleries */}
+      {/* Proyectos Gallery */}
       <LogoGallery isAdmin={isAdmin} />
-      <VideoGallery isAdmin={isAdmin} />
 
+      {/* Experiencia y Habilidades */}
       <Resume
         experiences={experiences}
         education={education}
@@ -151,14 +153,17 @@ const App: React.FC = () => {
         onUpdateSkills={updateSkills}
       />
 
+      {/* Contact Section */}
+      <Contact isAdmin={isAdmin} />
+
       <footer className="bg-slate-900 text-slate-400 py-10 text-center relative z-10">
-        <p>© {new Date().getFullYear()} {ownerName} Portfolio. Todos los derechos reservados.</p>
-        <p className="text-sm mt-2 mb-4">Diseño y Edición de Contenido Digital.</p>
+        <p>© {new Date().getFullYear()} {ownerName}. Software Developer Portfolio. Todos los derechos reservados.</p>
+        <p className="text-sm mt-2 mb-4">Full Stack Developer | React | Node.js | Cloud</p>
 
         {/* Admin Toggle Button */}
         <button
           onClick={handleLockClick}
-          className="inline-flex items-center gap-2 text-xs text-slate-600 hover:text-pink-500 transition-colors opacity-60 hover:opacity-100 p-2"
+          className="inline-flex items-center gap-2 text-xs text-slate-600 hover:text-blue-500 transition-colors opacity-60 hover:opacity-100 p-2"
           title={isAdmin ? "Cerrar sesión admin" : "Acceso Administrador"}
         >
           {isAdmin ? <Unlock size={14} /> : <Lock size={14} />}
@@ -187,7 +192,7 @@ const App: React.FC = () => {
                     setPasswordInput(e.target.value);
                     if (loginError) setLoginError('');
                   }}
-                  className="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 outline-none transition-all"
+                  className="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                   placeholder="••••••••"
                   autoFocus
                   autoComplete="current-password"
@@ -204,7 +209,7 @@ const App: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 font-medium transition-colors shadow-lg shadow-pink-500/30"
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors shadow-lg shadow-blue-500/30"
                 >
                   Entrar
                 </button>

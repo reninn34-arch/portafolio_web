@@ -1,40 +1,59 @@
 import React, { useState, useEffect } from 'react';
-import { Trash2, Upload, Plus, AlertTriangle } from 'lucide-react';
+import { Trash2, Upload, Plus, AlertTriangle, ExternalLink } from 'lucide-react';
 import { LogoItem } from '../types';
 
 interface LogoGalleryProps {
   isAdmin: boolean;
 }
 
+const normalizeLink = (url: string) => url.startsWith('http') ? url : `https://${url}`;
+
 export const LogoGallery: React.FC<LogoGalleryProps> = ({ isAdmin }) => {
   const [logos, setLogos] = useState<LogoItem[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewLink, setPreviewLink] = useState<string | null>(null);
+  const [newTitle, setNewTitle] = useState('');
+  const [newLink, setNewLink] = useState('');
 
   // Load from LocalStorage on mount
   useEffect(() => {
-    const savedLogos = localStorage.getItem('lady_portfolio_logos');
+    const savedLogos = localStorage.getItem('dev_portfolio_logos');
     if (savedLogos) {
       try {
-        setLogos(JSON.parse(savedLogos));
+        const parsed: LogoItem[] = JSON.parse(savedLogos);
+        setLogos(parsed.map((item) => ({
+          ...item,
+          link: item.link ? normalizeLink(item.link) : undefined,
+        })));
       } catch (e) {
         console.error("Error parsing logos", e);
       }
     } else {
-        // Default initial data for Lady Mosquera
+        // Default initial data for developers
         setLogos([
-            { id: '1', title: 'Kit de Marca Personal', imageUrl: 'https://picsum.photos/400/300?random=10', date: '2023-10-01' },
-            { id: '2', title: 'Posts Instagram Belleza', imageUrl: 'https://picsum.photos/400/400?random=11', date: '2023-11-15' },
-            { id: '3', title: 'Banners YouTube', imageUrl: 'https://picsum.photos/400/300?random=12', date: '2024-01-20' },
-            { id: '4', title: 'Flyers Eventos', imageUrl: 'https://picsum.photos/400/400?random=13', date: '2024-02-10' },
+            { id: '1', title: 'E-Commerce Platform', imageUrl: 'https://picsum.photos/400/300?random=10', date: '2023-10-01', link: 'https://example.com/shop' },
+            { id: '2', title: 'Task Management App', imageUrl: 'https://picsum.photos/400/400?random=11', date: '2023-11-15', link: 'https://example.com/tasks' },
+            { id: '3', title: 'Social Network MVP', imageUrl: 'https://picsum.photos/400/300?random=12', date: '2024-01-20', link: 'https://example.com/social' },
+            { id: '4', title: 'AI Chat Dashboard', imageUrl: 'https://picsum.photos/400/400?random=13', date: '2024-02-10', link: 'https://example.com/chat' },
         ]);
     }
   }, []);
 
   // Save to LocalStorage whenever logos change
   useEffect(() => {
-    localStorage.setItem('lady_portfolio_logos', JSON.stringify(logos));
+    localStorage.setItem('dev_portfolio_logos', JSON.stringify(logos));
   }, [logos]);
+
+  const handleProjectClick = (logo: LogoItem) => {
+    if (!isAdmin && logo.link) {
+      window.open(normalizeLink(logo.link), '_blank', 'noopener,noreferrer');
+      return;
+    }
+    setPreviewUrl(logo.imageUrl);
+    setPreviewLink(logo.link ?? null);
+  };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -48,14 +67,19 @@ export const LogoGallery: React.FC<LogoGalleryProps> = ({ isAdmin }) => {
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64String = reader.result as string;
+      const linkValue = newLink.trim() ? normalizeLink(newLink.trim()) : undefined;
+      const titleValue = newTitle.trim() || file.name.split('.')[0] || 'Proyecto';
       const newLogo: LogoItem = {
         id: Date.now().toString(),
-        title: file.name.split('.')[0],
+        title: titleValue,
         imageUrl: base64String,
-        date: new Date().toISOString().split('T')[0]
+        date: new Date().toISOString().split('T')[0],
+        link: linkValue,
       };
       setLogos(prev => [newLogo, ...prev]);
       setIsUploading(false);
+      setNewTitle('');
+      setNewLink('');
     };
     reader.readAsDataURL(file);
   };
@@ -76,13 +100,13 @@ export const LogoGallery: React.FC<LogoGalleryProps> = ({ isAdmin }) => {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center mb-12">
           <div>
-            <h2 className="text-3xl font-bold text-slate-800">Diseños & Branding</h2>
-            <p className="text-slate-500 mt-2">Logos, piezas para redes sociales y material publicitario.</p>
+            <h2 className="text-3xl font-bold text-slate-800">Proyectos Destacados</h2>
+            <p className="text-slate-500 mt-2">Aplicaciones y soluciones desarrolladas con tecnologías modernas.</p>
           </div>
           {isAdmin && (
             <button 
               onClick={() => setIsUploading(!isUploading)}
-              className="flex items-center gap-2 bg-pink-600 text-white px-4 py-2 rounded-lg hover:bg-pink-700 transition-colors"
+              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
               {isUploading ? 'Cancelar' : <><Plus size={20} /> Subir Diseño</>}
             </button>
@@ -90,10 +114,32 @@ export const LogoGallery: React.FC<LogoGalleryProps> = ({ isAdmin }) => {
         </div>
 
         {isUploading && isAdmin && (
-          <div className="mb-8 p-6 bg-white rounded-xl shadow-lg border-2 border-dashed border-pink-200 animate-in fade-in slide-in-from-top-4">
+          <div className="mb-8 p-6 bg-white rounded-xl shadow-lg border-2 border-dashed border-blue-200 animate-in fade-in slide-in-from-top-4">
             <div className="flex flex-col items-center justify-center text-center">
-              <Upload size={48} className="text-pink-400 mb-4" />
-              <p className="mb-4 text-slate-600">Sube tu imagen (JPG, PNG). Máximo 2MB.</p>
+              <Upload size={48} className="text-blue-400 mb-4" />
+              <p className="mb-4 text-slate-600">Sube la captura de pantalla de tu proyecto (JPG, PNG). Máximo 2MB.</p>
+              <div className="grid md:grid-cols-2 gap-4 w-full mb-4 text-left">
+                <label className="flex flex-col gap-2 text-sm text-slate-700">
+                  Nombre del proyecto
+                  <input
+                    type="text"
+                    value={newTitle}
+                    onChange={(e) => setNewTitle(e.target.value)}
+                    placeholder="Ej. Dashboard de ventas"
+                    className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </label>
+                <label className="flex flex-col gap-2 text-sm text-slate-700">
+                  Enlace público (opcional)
+                  <input
+                    type="url"
+                    value={newLink}
+                    onChange={(e) => setNewLink(e.target.value)}
+                    placeholder="https://tu-proyecto.com"
+                    className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </label>
+              </div>
               <input 
                 type="file" 
                 accept="image/*" 
@@ -102,8 +148,8 @@ export const LogoGallery: React.FC<LogoGalleryProps> = ({ isAdmin }) => {
                   file:mr-4 file:py-2 file:px-4
                   file:rounded-full file:border-0
                   file:text-sm file:font-semibold
-                  file:bg-pink-50 file:text-pink-700
-                  hover:file:bg-pink-100"
+                  file:bg-blue-50 file:text-blue-700
+                  hover:file:bg-blue-100"
               />
             </div>
           </div>
@@ -112,22 +158,38 @@ export const LogoGallery: React.FC<LogoGalleryProps> = ({ isAdmin }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {logos.map((logo) => (
             <div key={logo.id} className="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100">
-              <div className="aspect-square overflow-hidden bg-gray-100">
+              <button
+                type="button"
+                onClick={() => handleProjectClick(logo)}
+                className="h-64 w-full bg-slate-100 flex items-center justify-center overflow-hidden focus:outline-none"
+                title={logo.link ? 'Abrir proyecto' : 'Ver grande'}
+              >
                 <img 
                   src={logo.imageUrl} 
-                  alt={logo.title} 
-                  className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-500"
+                  alt="Proyecto"
+                  className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-105"
                 />
-              </div>
-              <div className="p-4">
-                <h3 className="font-bold text-slate-800 truncate">{logo.title}</h3>
-                <p className="text-xs text-slate-500 mt-1">{logo.date}</p>
-              </div>
+              </button>
+              {logo.link && (
+                <div className="p-4">
+                  <a
+                    href={normalizeLink(logo.link)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full inline-flex items-center justify-center gap-2 bg-blue-600 text-white px-3 py-2 rounded-lg shadow-lg hover:bg-blue-700 transition-colors"
+                    title="Abrir sitio"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <ExternalLink size={16} />
+                    Ver proyecto
+                  </a>
+                </div>
+              )}
               {isAdmin && (
                 <button 
-                  onClick={() => requestDelete(logo.id)}
+                  onClick={(e) => { e.stopPropagation(); requestDelete(logo.id); }}
                   className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full opacity-100 shadow-md hover:bg-red-600 transition-colors z-10"
-                  title="Eliminar logo"
+                  title="Eliminar proyecto"
                 >
                   <Trash2 size={16} />
                 </button>
@@ -136,7 +198,7 @@ export const LogoGallery: React.FC<LogoGalleryProps> = ({ isAdmin }) => {
           ))}
           {logos.length === 0 && (
             <div className="col-span-full text-center py-20 text-slate-400">
-              No hay diseños aún. {isAdmin ? '¡Sube el primero!' : 'Vuelve pronto para ver contenido.'}
+              No hay proyectos aún. {isAdmin ? '¡Sube el primero!' : 'Vuelve pronto para ver contenido.'}
             </div>
           )}
         </div>
@@ -167,6 +229,37 @@ export const LogoGallery: React.FC<LogoGalleryProps> = ({ isAdmin }) => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Preview Modal */}
+      {previewUrl && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => { setPreviewUrl(null); setPreviewLink(null); }}>
+          <div className="relative max-w-5xl w-full" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => { setPreviewUrl(null); setPreviewLink(null); }}
+              className="absolute -top-3 -right-3 bg-white text-slate-800 rounded-full p-2 shadow-lg hover:shadow-xl"
+              aria-label="Cerrar"
+            >
+              <span className="text-lg">×</span>
+            </button>
+            <div className="bg-white rounded-xl overflow-hidden shadow-2xl">
+              <img src={previewUrl} alt="Vista previa" className="w-full h-full object-contain max-h-[80vh]" />
+            </div>
+            {previewLink && (
+              <div className="mt-4 flex justify-end">
+                <a
+                  href={normalizeLink(previewLink)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-blue-700 transition-colors"
+                >
+                  <ExternalLink size={16} />
+                  Abrir proyecto
+                </a>
+              </div>
+            )}
           </div>
         </div>
       )}

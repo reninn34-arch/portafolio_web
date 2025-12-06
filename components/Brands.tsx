@@ -8,18 +8,25 @@ interface BrandsProps {
 interface Brand {
     id: string;
     name: string;
-    logo: string; // Base64
+    logo: string; // URL or Base64
 }
 
 export const Brands: React.FC<BrandsProps> = ({ isAdmin }) => {
-    const [brands, setBrands] = useState<Brand[]>([]);
+    const [brands, setBrands] = useState<Brand[]>([
+        { id: '1', name: 'React', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg' },
+        { id: '2', name: 'Node.js', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nodejs/nodejs-original.svg' },
+        { id: '3', name: 'TypeScript', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/typescript/typescript-original.svg' },
+        { id: '4', name: 'PostgreSQL', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/postgresql/postgresql-original.svg' },
+        { id: '5', name: 'Docker', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/docker/docker-original.svg' },
+        { id: '6', name: 'Next.js', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nextjs/nextjs-original.svg' },
+    ]);
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingBrand, setEditingBrand] = useState<string | null>(null);
     const [brandForm, setBrandForm] = useState<Brand>({ id: '', name: '', logo: '' });
 
     // Load brands from localStorage
     useEffect(() => {
-        const savedBrands = localStorage.getItem('lady_portfolio_brands');
+        const savedBrands = localStorage.getItem('dev_portfolio_brands');
         if (savedBrands) {
             setBrands(JSON.parse(savedBrands));
         }
@@ -27,7 +34,7 @@ export const Brands: React.FC<BrandsProps> = ({ isAdmin }) => {
 
     const saveBrands = (newBrands: Brand[]) => {
         setBrands(newBrands);
-        localStorage.setItem('lady_portfolio_brands', JSON.stringify(newBrands));
+        localStorage.setItem('dev_portfolio_brands', JSON.stringify(newBrands));
     };
 
     const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,10 +106,10 @@ export const Brands: React.FC<BrandsProps> = ({ isAdmin }) => {
             <div className="container mx-auto px-4 max-w-6xl">
                 <div className="text-center mb-12">
                     <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-                        Marcas con las que he trabajado
+                        Stack Tecnológico
                     </h2>
                     <p className="text-slate-600 max-w-2xl mx-auto">
-                        He tenido el privilegio de colaborar con estas increíbles marcas en proyectos de diseño y contenido visual.
+                        Tecnologías y herramientas que utilizo para desarrollar soluciones modernas y escalables.
                     </p>
                 </div>
 
@@ -192,11 +199,11 @@ export const Brands: React.FC<BrandsProps> = ({ isAdmin }) => {
                     {isAdmin && (
                         <button
                             onClick={openAddModal}
-                            className="bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 hover:scale-105 border-2 border-dashed border-slate-300 hover:border-pink-500 flex flex-col items-center justify-center min-h-[180px] group"
+                            className="bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 hover:scale-105 border-2 border-dashed border-slate-300 hover:border-blue-500 flex flex-col items-center justify-center min-h-[180px] group"
                         >
-                            <Plus size={48} className="text-slate-400 group-hover:text-pink-500 transition-colors mb-2" />
-                            <span className="text-sm font-medium text-slate-600 group-hover:text-pink-600 transition-colors">
-                                Agregar Marca
+                            <Plus size={48} className="text-slate-400 group-hover:text-blue-500 transition-colors mb-2" />
+                            <span className="text-sm font-medium text-slate-600 group-hover:text-blue-600 transition-colors">
+                                Agregar Tecnología
                             </span>
                         </button>
                     )}
@@ -204,7 +211,7 @@ export const Brands: React.FC<BrandsProps> = ({ isAdmin }) => {
 
                 {brands.length === 0 && isAdmin && (
                     <p className="text-center text-slate-500 text-sm">
-                        No hay marcas agregadas. Haz clic en "Agregar Marca" para comenzar.
+                        No hay tecnologías agregadas. Haz clic en "Agregar Tecnología" para comenzar.
                     </p>
                 )}
             </div>
@@ -215,7 +222,7 @@ export const Brands: React.FC<BrandsProps> = ({ isAdmin }) => {
                     <div className="bg-white rounded-xl w-full max-w-md shadow-2xl animate-in fade-in zoom-in-95">
                         <div className="p-6 border-b border-slate-200">
                             <div className="flex justify-between items-center">
-                                <h3 className="text-xl font-bold text-slate-900">Agregar Marca</h3>
+                                <h3 className="text-xl font-bold text-slate-900">Agregar Tecnología</h3>
                                 <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600">
                                     <X size={24} />
                                 </button>
@@ -224,19 +231,19 @@ export const Brands: React.FC<BrandsProps> = ({ isAdmin }) => {
 
                         <div className="p-6 space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2">Nombre de la Marca</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">Nombre de la Tecnología</label>
                                 <input
                                     type="text"
                                     value={brandForm.name}
                                     onChange={(e) => setBrandForm({ ...brandForm, name: e.target.value })}
-                                    placeholder="Ej: Nike, Coca-Cola, etc."
-                                    className="w-full border border-slate-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 outline-none"
+                                    placeholder="Ej: React, Node.js, Docker, etc."
+                                    className="w-full border border-slate-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                                 />
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-2">Logo</label>
-                                <label className="cursor-pointer block w-full p-8 border-2 border-dashed border-slate-300 hover:border-pink-500 rounded-lg text-center transition-colors">
+                                <label className="cursor-pointer block w-full p-8 border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-lg text-center transition-colors">
                                     {brandForm.logo ? (
                                         <div className="space-y-2">
                                             <img src={brandForm.logo} alt="Preview" className="max-h-32 mx-auto object-contain" />
@@ -268,7 +275,7 @@ export const Brands: React.FC<BrandsProps> = ({ isAdmin }) => {
                             </button>
                             <button
                                 onClick={handleAddBrand}
-                                className="flex-1 px-4 py-2.5 bg-pink-600 text-white rounded-lg hover:bg-pink-700 font-medium transition-colors shadow-lg shadow-pink-500/30"
+                                className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors shadow-lg shadow-blue-500/30"
                             >
                                 Agregar
                             </button>

@@ -12,7 +12,7 @@ export const FloatingWhatsApp: React.FC<FloatingWhatsAppProps> = ({ isAdmin }) =
 
   // Load phone number
   useEffect(() => {
-    const savedPhone = localStorage.getItem('lady_portfolio_whatsapp');
+    const savedPhone = localStorage.getItem('dev_portfolio_whatsapp');
     if (savedPhone) {
       setPhoneNumber(savedPhone);
     }
@@ -47,7 +47,7 @@ export const FloatingWhatsApp: React.FC<FloatingWhatsAppProps> = ({ isAdmin }) =
     // Basic clean up of number (remove +, spaces, dashes)
     const cleanNumber = tempNumber.replace(/[^0-9]/g, '');
     setPhoneNumber(cleanNumber);
-    localStorage.setItem('lady_portfolio_whatsapp', cleanNumber);
+    localStorage.setItem('dev_portfolio_whatsapp', cleanNumber);
     setIsEditing(false);
   };
 

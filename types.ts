@@ -3,6 +3,7 @@ export interface LogoItem {
   title: string;
   imageUrl: string; // Base64 or URL
   date: string;
+  link?: string;
 }
 
 export interface VideoItem {

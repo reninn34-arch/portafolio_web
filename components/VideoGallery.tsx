@@ -15,23 +15,23 @@ export const VideoGallery: React.FC<VideoGalleryProps> = ({ isAdmin }) => {
 
   // Load from LocalStorage
   useEffect(() => {
-    const savedVideos = localStorage.getItem('lady_portfolio_videos');
+    const savedVideos = localStorage.getItem('dev_portfolio_videos');
     if (savedVideos) {
       try {
         setVideos(JSON.parse(savedVideos));
       } catch(e) { console.error(e); }
     } else {
-        // Defaults for Lady Mosquera
+        // Defaults for developers - Demo videos
         setVideos([
-            { id: '1', title: 'Reel de Moda & Lifestyle', youtubeUrl: 'https://www.youtube.com/watch?v=LXb3EKWsInQ', videoId: 'LXb3EKWsInQ' },
-            { id: '2', title: 'Edición Dinámica para YouTube', youtubeUrl: 'https://www.youtube.com/watch?v=ScMzIvxBSi4', videoId: 'ScMzIvxBSi4' },
-            { id: '3', title: 'Intro para Canal de Vlogs', youtubeUrl: 'https://www.youtube.com/watch?v=aqz-KE-bpKQ', videoId: 'aqz-KE-bpKQ' }
+            { id: '1', title: 'Full Stack App Demo', youtubeUrl: 'https://www.youtube.com/watch?v=LXb3EKWsInQ', videoId: 'LXb3EKWsInQ' },
+            { id: '2', title: 'React Tutorial - Build a Dashboard', youtubeUrl: 'https://www.youtube.com/watch?v=ScMzIvxBSi4', videoId: 'ScMzIvxBSi4' },
+            { id: '3', title: 'Node.js API Development', youtubeUrl: 'https://www.youtube.com/watch?v=aqz-KE-bpKQ', videoId: 'aqz-KE-bpKQ' }
         ]);
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('lady_portfolio_videos', JSON.stringify(videos));
+    localStorage.setItem('dev_portfolio_videos', JSON.stringify(videos));
   }, [videos]);
 
   const extractVideoId = (url: string): string | null => {
@@ -78,15 +78,15 @@ export const VideoGallery: React.FC<VideoGalleryProps> = ({ isAdmin }) => {
         <div className="flex flex-col md:flex-row justify-between items-end md:items-center mb-12 gap-4">
           <div>
             <h2 className="text-3xl font-bold flex items-center gap-3">
-              <Youtube className="text-red-500" size={32} />
-              Galería de Video
+              <Youtube className="text-blue-500" size={32} />
+              Tutoriales & Demostraciones
             </h2>
-            <p className="text-slate-400 mt-2">Reels, TikToks, Vlogs y Contenido Promocional.</p>
+            <p className="text-slate-400 mt-2">Videos de proyectos, tutoriales y demostración de aplicaciones.</p>
           </div>
           {isAdmin && (
             <button 
               onClick={() => setIsAdding(!isAdding)}
-              className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full font-medium transition-colors flex items-center gap-2"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full font-medium transition-colors flex items-center gap-2"
             >
               {isAdding ? 'Cancelar' : <><Plus size={20} /> Añadir Video</>}
             </button>
@@ -148,7 +148,7 @@ export const VideoGallery: React.FC<VideoGalleryProps> = ({ isAdmin }) => {
                 {isAdmin && (
                   <button 
                     onClick={() => requestDelete(video.id)}
-                    className="text-white bg-red-600 rounded-full p-2 hover:bg-red-700 transition-colors shadow-lg z-10"
+                    className="text-white bg-blue-600 rounded-full p-2 hover:bg-blue-700 transition-colors shadow-lg z-10"
                     title="Eliminar video"
                   >
                     <Trash2 size={16} />
@@ -170,7 +170,7 @@ export const VideoGallery: React.FC<VideoGalleryProps> = ({ isAdmin }) => {
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-slate-800 border border-slate-700 rounded-xl shadow-2xl max-w-sm w-full p-6 animate-in fade-in zoom-in-95">
             <div className="flex flex-col items-center text-center">
-              <div className="w-12 h-12 bg-red-900/30 text-red-500 rounded-full flex items-center justify-center mb-4 border border-red-500/20">
+              <div className="w-12 h-12 bg-blue-900/30 text-blue-500 rounded-full flex items-center justify-center mb-4 border border-blue-500/20">
                 <AlertTriangle size={24} />
               </div>
               <h3 className="text-xl font-bold text-white mb-2">¿Eliminar video?</h3>
@@ -184,7 +184,7 @@ export const VideoGallery: React.FC<VideoGalleryProps> = ({ isAdmin }) => {
                 </button>
                 <button 
                   onClick={confirmDelete}
-                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors shadow-lg shadow-red-500/30"
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors shadow-lg shadow-blue-500/30"
                 >
                   Sí, eliminar
                 </button>

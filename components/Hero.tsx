@@ -27,14 +27,14 @@ interface HeroContent {
 export const Hero: React.FC<HeroProps> = ({ isAdmin }) => {
   // Default hero content
   const defaultHeroContent: HeroContent = {
-    title: 'Diseño Gráfico & Edición de Video',
-    name: 'Lady Mosquera',
-    description: 'Transformo ideas en contenido visual impactante para redes sociables. Especialista en diseño de marcas, miniaturas y edición dinámica de video.',
+    title: 'Full Stack Developer',
+    name: 'Alex',
+    description: 'Desarrollo de aplicaciones web modernas con React, Node.js y tecnologías cloud. Especializado en arquitectura de software, APIs REST y microservicios.',
     profilePhoto: '',
     backgroundType: 'gradient',
     gradientFrom: '#0f172a', // slate-900
-    gradientVia: '#581c87',   // purple-900
-    gradientTo: '#831843',    // pink-900
+    gradientVia: '#1e40af',   // blue-800
+    gradientTo: '#1e3a8a',    // blue-900
     backgroundImage: ''
   };
 
@@ -54,7 +54,7 @@ export const Hero: React.FC<HeroProps> = ({ isAdmin }) => {
 
   // Load socials
   useEffect(() => {
-    const savedSocials = localStorage.getItem('lady_portfolio_socials');
+    const savedSocials = localStorage.getItem('dev_portfolio_socials');
     if (savedSocials) {
       setSocials(JSON.parse(savedSocials));
     } else {
@@ -69,7 +69,7 @@ export const Hero: React.FC<HeroProps> = ({ isAdmin }) => {
 
   const handleSave = () => {
     setSocials(tempSocials);
-    localStorage.setItem('lady_portfolio_socials', JSON.stringify(tempSocials));
+    localStorage.setItem('dev_portfolio_socials', JSON.stringify(tempSocials));
     setShowEditModal(false);
   };
 
@@ -80,7 +80,7 @@ export const Hero: React.FC<HeroProps> = ({ isAdmin }) => {
 
   // Load hero content
   useEffect(() => {
-    const savedHeroContent = localStorage.getItem('lady_portfolio_hero_content');
+    const savedHeroContent = localStorage.getItem('dev_portfolio_hero_content');
     if (savedHeroContent) {
       setHeroContent(JSON.parse(savedHeroContent));
     }
@@ -95,7 +95,7 @@ export const Hero: React.FC<HeroProps> = ({ isAdmin }) => {
 
   const handleHeroSave = () => {
     setHeroContent(tempHeroContent);
-    localStorage.setItem('lady_portfolio_hero_content', JSON.stringify(tempHeroContent));
+    localStorage.setItem('dev_portfolio_hero_content', JSON.stringify(tempHeroContent));
     setShowHeroEditModal(false);
   };
 
@@ -202,7 +202,7 @@ export const Hero: React.FC<HeroProps> = ({ isAdmin }) => {
             {isAdmin && (
               <>
                 {/* Upload button */}
-                <label className="absolute bottom-0 right-0 p-2 bg-pink-600 hover:bg-pink-500 rounded-full cursor-pointer shadow-lg transition-all">
+                <label className="absolute bottom-0 right-0 p-2 bg-blue-600 hover:bg-blue-500 rounded-full cursor-pointer shadow-lg transition-all">
                   <Camera size={20} className="text-white" />
                   <input
                     type="file"
@@ -261,19 +261,12 @@ export const Hero: React.FC<HeroProps> = ({ isAdmin }) => {
           {heroContent.description}
         </p>
 
-        <div className="flex gap-4 justify-center mb-12">
-          {/* Native anchor links relying on scroll-smooth in html tag */}
-          <a
-            href="#portfolio-videos"
-            className="px-8 py-3 bg-pink-600 hover:bg-pink-500 text-white rounded-lg font-medium transition-all shadow-lg shadow-pink-500/30 hover:shadow-pink-500/50 cursor-pointer"
-          >
-            Ver Mis Videos
-          </a>
+        <div className="flex justify-center mb-12">
           <a
             href="#portfolio-logos"
-            className="px-8 py-3 bg-slate-800/50 hover:bg-slate-700/50 text-white rounded-lg font-medium transition-all border border-slate-600 backdrop-blur-sm cursor-pointer"
+            className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium transition-all shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 cursor-pointer"
           >
-            Ver Diseños
+            Ver Proyectos
           </a>
         </div>
 
@@ -391,7 +384,7 @@ export const Hero: React.FC<HeroProps> = ({ isAdmin }) => {
               </button>
               <button
                 onClick={handleSave}
-                className="flex-1 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 font-medium flex items-center justify-center gap-2"
+                className="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center justify-center gap-2"
               >
                 <Save size={18} /> Guardar
               </button>
@@ -420,7 +413,7 @@ export const Hero: React.FC<HeroProps> = ({ isAdmin }) => {
                 <button
                   onClick={() => setActiveTab('content')}
                   className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === 'content'
-                    ? 'bg-pink-600 text-white'
+                    ? 'bg-blue-600 text-white'
                     : 'bg-slate-800 text-slate-400 hover:text-white'
                     }`}
                 >
@@ -429,7 +422,7 @@ export const Hero: React.FC<HeroProps> = ({ isAdmin }) => {
                 <button
                   onClick={() => setActiveTab('photo')}
                   className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === 'photo'
-                    ? 'bg-pink-600 text-white'
+                    ? 'bg-blue-600 text-white'
                     : 'bg-slate-800 text-slate-400 hover:text-white'
                     }`}
                 >
@@ -438,7 +431,7 @@ export const Hero: React.FC<HeroProps> = ({ isAdmin }) => {
                 <button
                   onClick={() => setActiveTab('background')}
                   className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === 'background'
-                    ? 'bg-pink-600 text-white'
+                    ? 'bg-blue-600 text-white'
                     : 'bg-slate-800 text-slate-400 hover:text-white'
                     }`}
                 >
@@ -504,7 +497,7 @@ export const Hero: React.FC<HeroProps> = ({ isAdmin }) => {
                         </div>
                       )}
                     </div>
-                    <label className="cursor-pointer px-6 py-3 bg-pink-600 hover:bg-pink-500 text-white rounded-lg font-medium transition-colors flex items-center gap-2">
+                    <label className="cursor-pointer px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium transition-colors flex items-center gap-2">
                       <Camera size={20} />
                       {tempHeroContent.profilePhoto ? 'Cambiar Foto' : 'Subir Foto'}
                       <input
@@ -667,7 +660,7 @@ export const Hero: React.FC<HeroProps> = ({ isAdmin }) => {
                 </button>
                 <button
                   onClick={handleHeroSave}
-                  className="flex-1 py-3 bg-pink-600 text-white rounded-lg hover:bg-pink-700 font-medium flex items-center justify-center gap-2"
+                  className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center justify-center gap-2"
                 >
                   <Save size={18} /> Guardar Cambios
                 </button>

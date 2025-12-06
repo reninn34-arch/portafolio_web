@@ -38,7 +38,7 @@ export const Resume: React.FC<ResumeProps> = ({
   const [skillForm, setSkillForm] = useState<Skill>({ name: '', level: 50 });
 
   useEffect(() => {
-    const savedPdf = localStorage.getItem('lady_portfolio_resume_pdf');
+    const savedPdf = localStorage.getItem('dev_portfolio_resume_pdf');
     if (savedPdf) {
       setPdfData(savedPdf);
     }
@@ -62,7 +62,7 @@ export const Resume: React.FC<ResumeProps> = ({
     reader.onloadend = () => {
       const base64String = reader.result as string;
       setPdfData(base64String);
-      localStorage.setItem('lady_portfolio_resume_pdf', base64String);
+      localStorage.setItem('dev_portfolio_resume_pdf', base64String);
     };
     reader.readAsDataURL(file);
   };
@@ -71,7 +71,7 @@ export const Resume: React.FC<ResumeProps> = ({
     if (pdfData) {
       const link = document.createElement('a');
       link.href = pdfData;
-      link.download = 'Curriculum_Lady_Mosquera.pdf';
+      link.download = 'CV_Developer_Alex.pdf';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -80,7 +80,7 @@ export const Resume: React.FC<ResumeProps> = ({
 
   const handleDelete = () => {
     setPdfData(null);
-    localStorage.removeItem('lady_portfolio_resume_pdf');
+    localStorage.removeItem('dev_portfolio_resume_pdf');
   };
 
   // Experience handlers
@@ -202,7 +202,7 @@ export const Resume: React.FC<ResumeProps> = ({
                 onClick={handleDownload}
                 onMouseEnter={() => setIsHovering(true)}
                 onMouseLeave={() => setIsHovering(false)}
-                className="group relative inline-flex items-center gap-3 px-8 py-3 bg-slate-900 text-white font-bold rounded-full hover:bg-pink-600 transition-all shadow-lg hover:shadow-pink-500/30 overflow-hidden"
+                className="group relative inline-flex items-center gap-3 px-8 py-3 bg-slate-900 text-white font-bold rounded-full hover:bg-blue-600 transition-all shadow-lg hover:shadow-blue-500/30 overflow-hidden"
               >
                 <div className={`absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300`}></div>
                 <div className="relative flex items-center gap-2">
