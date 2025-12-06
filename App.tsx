@@ -197,7 +197,7 @@ const App: React.FC = () => {
                   autoFocus
                   autoComplete="current-password"
                 />
-                {loginError && <p className="text-red-500 text-sm mt-2">{loginError}</p>}
+                {loginError && <p className="text-red-500 text-sm mt-2">Contraseña incorrecta</p>}
               </div>
               <div className="flex gap-3">
                 <button
