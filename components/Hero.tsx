@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowDown, Instagram, Linkedin, Mail, Youtube, PenSquare, X, Save, Camera, Image as ImageIcon, Edit } from 'lucide-react';
+import { syncToSupabase } from '../services/syncHelper';
 
 interface HeroProps {
   isAdmin: boolean;
@@ -67,9 +68,9 @@ export const Hero: React.FC<HeroProps> = ({ isAdmin }) => {
     setShowEditModal(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setSocials(tempSocials);
-    localStorage.setItem('dev_portfolio_socials', JSON.stringify(tempSocials));
+    await syncToSupabase('dev_portfolio_socials', tempSocials);
     setShowEditModal(false);
   };
 
@@ -93,9 +94,9 @@ export const Hero: React.FC<HeroProps> = ({ isAdmin }) => {
     setActiveTab('content');
   };
 
-  const handleHeroSave = () => {
+  const handleHeroSave = async () => {
     setHeroContent(tempHeroContent);
-    localStorage.setItem('dev_portfolio_hero_content', JSON.stringify(tempHeroContent));
+    await syncToSupabase('dev_portfolio_hero_content', tempHeroContent);
     setShowHeroEditModal(false);
   };
 

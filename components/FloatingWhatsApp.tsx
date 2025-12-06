@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MessageCircle, Settings, X, Save } from 'lucide-react';
+import { syncToSupabase } from '../services/syncHelper';
 
 interface FloatingWhatsAppProps {
   isAdmin: boolean;
@@ -42,12 +43,12 @@ export const FloatingWhatsApp: React.FC<FloatingWhatsAppProps> = ({ isAdmin }) =
     setIsEditing(true);
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     // Basic clean up of number (remove +, spaces, dashes)
     const cleanNumber = tempNumber.replace(/[^0-9]/g, '');
     setPhoneNumber(cleanNumber);
-    localStorage.setItem('dev_portfolio_whatsapp', cleanNumber);
+    await syncToSupabase('dev_portfolio_whatsapp', cleanNumber);
     setIsEditing(false);
   };
 

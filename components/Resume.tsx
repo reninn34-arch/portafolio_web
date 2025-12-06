@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Briefcase, GraduationCap, Star, Download, Upload, Trash2, FileText, CheckCircle2, Edit, Plus, Save, X } from 'lucide-react';
 import { Experience, Education, Skill } from '../types';
+import { syncToSupabase } from '../services/syncHelper';
 
 interface ResumeProps {
   experiences: Experience[];
@@ -44,7 +45,7 @@ export const Resume: React.FC<ResumeProps> = ({
     }
   }, []);
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -59,28 +60,17 @@ export const Resume: React.FC<ResumeProps> = ({
     }
 
     const reader = new FileReader();
-    reader.onloadend = () => {
+    reader.onloadend = async () => {
       const base64String = reader.result as string;
       setPdfData(base64String);
-      localStorage.setItem('dev_portfolio_resume_pdf', base64String);
+      await syncToSupabase('dev_portfolio_resume_pdf', base64String);
     };
     reader.readAsDataURL(file);
   };
 
-  const handleDownload = () => {
-    if (pdfData) {
-      const link = document.createElement('a');
-      link.href = pdfData;
-      link.download = 'CV_Developer_Alex.pdf';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  };
-
-  const handleDelete = () => {
+  const handleDelete = async () => {
     setPdfData(null);
-    localStorage.removeItem('dev_portfolio_resume_pdf');
+    await syncToSupabase('dev_portfolio_resume_pdf', '');
   };
 
   // Experience handlers

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, Unlock, X, Download, Upload, Cloud } from 'lucide-react';
+import { Lock, Unlock, X, Download, Upload, Cloud, Database } from 'lucide-react';
 import { Hero } from './components/Hero';
 import { Brands } from './components/Brands';
 import { LogoGallery } from './components/LogoGallery';
@@ -8,6 +8,7 @@ import { FloatingWhatsApp } from './components/FloatingWhatsApp';
 import { Contact } from './components/Contact';
 import { Experience, Education, Skill } from './types';
 import { fetchPortfolioDataFromGitHub, savePortfolioDataToGitHub } from './services/githubService';
+import { fetchPortfolioFromSupabase, savePortfolioToSupabase, initializePortfolio } from './services/supabaseService';
 
 const App: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -17,7 +18,7 @@ const App: React.FC = () => {
   const [githubToken, setGithubToken] = useState('');
   const [showTokenModal, setShowTokenModal] = useState(false);
 
-  // Check admin session and load data from GitHub JSON on mount
+  // Check admin session and load data from Supabase on mount
   useEffect(() => {
     const adminSession = sessionStorage.getItem('isAdmin');
     if (adminSession === 'true') {
@@ -29,34 +30,70 @@ const App: React.FC = () => {
       setGithubToken(savedToken);
     }
 
-    // Always try to load from GitHub JSON first
-    fetchPortfolioDataFromGitHub()
-      .then((data) => {
-        if (!data) return;
-        
-        setExperiences(data.experiences || defaultExperiences);
-        setEducation(data.education || defaultEducation);
-        setSkills(data.skills || defaultSkills);
-        
-        // Also update localStorage for admin edits
-        localStorage.setItem('dev_portfolio_experiences', JSON.stringify(data.experiences || []));
-        localStorage.setItem('dev_portfolio_education', JSON.stringify(data.education || []));
-        localStorage.setItem('dev_portfolio_skills', JSON.stringify(data.skills || []));
-        localStorage.setItem('dev_portfolio_socials', JSON.stringify(data.socials || {}));
-        localStorage.setItem('dev_portfolio_logos', JSON.stringify(data.logos || []));
-        localStorage.setItem('dev_portfolio_hero_content', JSON.stringify(data.heroContent || {}));
-      })
-      .catch(() => {
-        // Fallback to localStorage if GitHub fails
-        const savedExp = localStorage.getItem('dev_portfolio_experiences');
-        const savedEdu = localStorage.getItem('dev_portfolio_education');
-        const savedSkills = localStorage.getItem('dev_portfolio_skills');
-        
-        if (savedExp) setExperiences(JSON.parse(savedExp));
-        if (savedEdu) setEducation(JSON.parse(savedEdu));
-        if (savedSkills) setSkills(JSON.parse(savedSkills));
-      });
+    // Load from Supabase first, then fallback to GitHub, then localStorage
+    loadPortfolioData();
   }, []);
+
+  // Load portfolio data from Supabase or fallback sources
+  const loadPortfolioData = async () => {
+    try {
+      // Try Supabase first
+      const supabaseData = await fetchPortfolioFromSupabase();
+      
+      if (supabaseData) {
+        console.log('✅ Datos cargados desde Supabase');
+        setExperiences(supabaseData.experiences || defaultExperiences);
+        setEducation(supabaseData.education || defaultEducation);
+        setSkills(supabaseData.skills || defaultSkills);
+        
+        // Update localStorage cache
+        localStorage.setItem('dev_portfolio_experiences', JSON.stringify(supabaseData.experiences || []));
+        localStorage.setItem('dev_portfolio_education', JSON.stringify(supabaseData.education || []));
+        localStorage.setItem('dev_portfolio_skills', JSON.stringify(supabaseData.skills || []));
+        localStorage.setItem('dev_portfolio_socials', JSON.stringify(supabaseData.socials || {}));
+        localStorage.setItem('dev_portfolio_logos', JSON.stringify(supabaseData.logos || []));
+        localStorage.setItem('dev_portfolio_hero_content', JSON.stringify(supabaseData.heroContent || {}));
+        localStorage.setItem('dev_portfolio_brands', JSON.stringify(supabaseData.brands || []));
+        localStorage.setItem('dev_portfolio_whatsapp', supabaseData.whatsapp || '');
+        localStorage.setItem('dev_portfolio_resume_pdf', supabaseData.pdfData || '');
+        return;
+      }
+    } catch (error) {
+      console.error('Error loading from Supabase:', error);
+    }
+
+    // Fallback to GitHub JSON
+    try {
+      const githubData = await fetchPortfolioDataFromGitHub();
+      if (githubData) {
+        console.log('⚠️ Cargando desde GitHub (Supabase no disponible)');
+        setExperiences(githubData.experiences || defaultExperiences);
+        setEducation(githubData.education || defaultEducation);
+        setSkills(githubData.skills || defaultSkills);
+        
+        // Update localStorage
+        localStorage.setItem('dev_portfolio_experiences', JSON.stringify(githubData.experiences || []));
+        localStorage.setItem('dev_portfolio_education', JSON.stringify(githubData.education || []));
+        localStorage.setItem('dev_portfolio_skills', JSON.stringify(githubData.skills || []));
+        localStorage.setItem('dev_portfolio_socials', JSON.stringify(githubData.socials || {}));
+        localStorage.setItem('dev_portfolio_logos', JSON.stringify(githubData.logos || []));
+        localStorage.setItem('dev_portfolio_hero_content', JSON.stringify(githubData.heroContent || {}));
+        return;
+      }
+    } catch (error) {
+      console.error('Error loading from GitHub:', error);
+    }
+
+    // Final fallback to localStorage
+    console.log('⚠️ Usando datos locales');
+    const savedExp = localStorage.getItem('dev_portfolio_experiences');
+    const savedEdu = localStorage.getItem('dev_portfolio_education');
+    const savedSkills = localStorage.getItem('dev_portfolio_skills');
+    
+    if (savedExp) setExperiences(JSON.parse(savedExp));
+    if (savedEdu) setEducation(JSON.parse(savedEdu));
+    if (savedSkills) setSkills(JSON.parse(savedSkills));
+  };
 
   const handleLockClick = () => {
     if (isAdmin) {
@@ -139,20 +176,56 @@ const App: React.FC = () => {
   const [education, setEducation] = useState<Education[]>(defaultEducation);
   const [skills, setSkills] = useState<Skill[]>(defaultSkills);
 
-  // Update handlers
-  const updateExperiences = (newExperiences: Experience[]) => {
+  // Update handlers with Supabase sync
+  const updateExperiences = async (newExperiences: Experience[]) => {
     setExperiences(newExperiences);
     localStorage.setItem('dev_portfolio_experiences', JSON.stringify(newExperiences));
+    
+    // Auto-save to Supabase
+    await saveToSupabase({ experiences: newExperiences });
   };
 
-  const updateEducation = (newEducation: Education[]) => {
+  const updateEducation = async (newEducation: Education[]) => {
     setEducation(newEducation);
     localStorage.setItem('dev_portfolio_education', JSON.stringify(newEducation));
+    
+    // Auto-save to Supabase
+    await saveToSupabase({ education: newEducation });
   };
 
-  const updateSkills = (newSkills: Skill[]) => {
+  const updateSkills = async (newSkills: Skill[]) => {
     setSkills(newSkills);
     localStorage.setItem('dev_portfolio_skills', JSON.stringify(newSkills));
+    
+    // Auto-save to Supabase
+    await saveToSupabase({ skills: newSkills });
+  };
+
+  // Save all data to Supabase
+  const saveToSupabase = async (partialData?: any) => {
+    try {
+      const allData = {
+        experiences,
+        education,
+        skills,
+        socials: JSON.parse(localStorage.getItem('dev_portfolio_socials') || '{}'),
+        logos: JSON.parse(localStorage.getItem('dev_portfolio_logos') || '[]'),
+        brands: JSON.parse(localStorage.getItem('dev_portfolio_brands') || '[]'),
+        heroContent: JSON.parse(localStorage.getItem('dev_portfolio_hero_content') || '{}'),
+        whatsapp: localStorage.getItem('dev_portfolio_whatsapp') || '',
+        pdfData: localStorage.getItem('dev_portfolio_resume_pdf') || '',
+        ...partialData
+      };
+
+      const success = await savePortfolioToSupabase(allData);
+      if (success) {
+        console.log('✅ Guardado automático en Supabase');
+      }
+      return success;
+    } catch (error) {
+      console.error('Error saving to Supabase:', error);
+      return false;
+    }
   };
 
   const ownerName = "Alex";
@@ -247,6 +320,41 @@ const App: React.FC = () => {
     }
   };
 
+  // Manual save to Supabase
+  const handleSaveToSupabase = async () => {
+    const success = await saveToSupabase();
+    if (success) {
+      alert('✅ Datos guardados en Supabase exitosamente');
+    } else {
+      alert('❌ Error al guardar en Supabase. Verifica tu conexión.');
+    }
+  };
+
+  // Load from Supabase manually
+  const handleLoadFromSupabase = async () => {
+    const data = await fetchPortfolioFromSupabase();
+    if (data) {
+      localStorage.setItem('dev_portfolio_experiences', JSON.stringify(data.experiences || []));
+      localStorage.setItem('dev_portfolio_education', JSON.stringify(data.education || []));
+      localStorage.setItem('dev_portfolio_skills', JSON.stringify(data.skills || []));
+      localStorage.setItem('dev_portfolio_socials', JSON.stringify(data.socials || {}));
+      localStorage.setItem('dev_portfolio_logos', JSON.stringify(data.logos || []));
+      localStorage.setItem('dev_portfolio_brands', JSON.stringify(data.brands || []));
+      localStorage.setItem('dev_portfolio_hero_content', JSON.stringify(data.heroContent || {}));
+      localStorage.setItem('dev_portfolio_whatsapp', data.whatsapp || '');
+      localStorage.setItem('dev_portfolio_resume_pdf', data.pdfData || '');
+      
+      setExperiences(data.experiences || defaultExperiences);
+      setEducation(data.education || defaultEducation);
+      setSkills(data.skills || defaultSkills);
+      
+      alert('✅ Datos cargados desde Supabase');
+      window.location.reload();
+    } else {
+      alert('❌ No se pudo cargar los datos de Supabase');
+    }
+  };
+
   // Load from GitHub
   const handleLoadFromGitHub = async () => {
     const data = await fetchPortfolioDataFromGitHub();
@@ -301,6 +409,24 @@ const App: React.FC = () => {
           {/* Admin Data Tools */}
           {isAdmin && (
             <>
+              <button
+                onClick={handleSaveToSupabase}
+                className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-emerald-400 transition-colors p-2 border border-slate-600 rounded hover:border-emerald-400"
+                title="Guardar en Supabase"
+              >
+                <Database size={14} />
+                Guardar DB
+              </button>
+
+              <button
+                onClick={handleLoadFromSupabase}
+                className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-teal-400 transition-colors p-2 border border-slate-600 rounded hover:border-teal-400"
+                title="Cargar desde Supabase"
+              >
+                <Database size={14} />
+                Cargar DB
+              </button>
+              
               <button
                 onClick={handleExportData}
                 className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-green-400 transition-colors p-2 border border-slate-600 rounded hover:border-green-400"

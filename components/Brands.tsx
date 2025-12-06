@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Save, X, Upload } from 'lucide-react';
+import { syncToSupabase } from '../services/syncHelper';
 
 interface BrandsProps {
     isAdmin: boolean;
@@ -32,9 +33,9 @@ export const Brands: React.FC<BrandsProps> = ({ isAdmin }) => {
         }
     }, []);
 
-    const saveBrands = (newBrands: Brand[]) => {
+    const saveBrands = async (newBrands: Brand[]) => {
         setBrands(newBrands);
-        localStorage.setItem('dev_portfolio_brands', JSON.stringify(newBrands));
+        await syncToSupabase('dev_portfolio_brands', newBrands);
     };
 
     const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

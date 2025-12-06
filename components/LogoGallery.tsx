@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Trash2, Upload, Plus, AlertTriangle, ExternalLink } from 'lucide-react';
 import { LogoItem } from '../types';
+import { syncToSupabase } from '../services/syncHelper';
 
 interface LogoGalleryProps {
   isAdmin: boolean;
@@ -41,9 +42,11 @@ export const LogoGallery: React.FC<LogoGalleryProps> = ({ isAdmin }) => {
     }
   }, []);
 
-  // Save to LocalStorage whenever logos change
+  // Save to LocalStorage and Supabase whenever logos change
   useEffect(() => {
-    localStorage.setItem('dev_portfolio_logos', JSON.stringify(logos));
+    if (logos.length > 0) {
+      syncToSupabase('dev_portfolio_logos', logos);
+    }
   }, [logos]);
 
   const handleProjectClick = (logo: LogoItem) => {
