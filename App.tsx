@@ -73,16 +73,30 @@ const App: React.FC = () => {
           });
         }
         
-        // Update localStorage cache
+        // Update localStorage cache - only if data exists, don't overwrite with empty arrays
         localStorage.setItem('dev_portfolio_experiences', JSON.stringify(experiences));
         localStorage.setItem('dev_portfolio_education', JSON.stringify(education));
         localStorage.setItem('dev_portfolio_skills', JSON.stringify(skills));
-        localStorage.setItem('dev_portfolio_socials', JSON.stringify(supabaseData.socials || {}));
-        localStorage.setItem('dev_portfolio_logos', JSON.stringify(supabaseData.logos || []));
-        localStorage.setItem('dev_portfolio_hero_content', JSON.stringify(supabaseData.heroContent || {}));
-        localStorage.setItem('dev_portfolio_brands', JSON.stringify(supabaseData.brands || []));
-        localStorage.setItem('dev_portfolio_whatsapp', supabaseData.whatsapp || '');
-        localStorage.setItem('dev_portfolio_resume_pdf', supabaseData.pdfData || '');
+        
+        // Only update these if they have content, otherwise preserve what's already in localStorage
+        if (supabaseData.socials && Object.keys(supabaseData.socials).length > 0) {
+          localStorage.setItem('dev_portfolio_socials', JSON.stringify(supabaseData.socials));
+        }
+        if (supabaseData.logos && supabaseData.logos.length > 0) {
+          localStorage.setItem('dev_portfolio_logos', JSON.stringify(supabaseData.logos));
+        }
+        if (supabaseData.brands && supabaseData.brands.length > 0) {
+          localStorage.setItem('dev_portfolio_brands', JSON.stringify(supabaseData.brands));
+        }
+        if (supabaseData.heroContent && Object.keys(supabaseData.heroContent).length > 0) {
+          localStorage.setItem('dev_portfolio_hero_content', JSON.stringify(supabaseData.heroContent));
+        }
+        if (supabaseData.whatsapp) {
+          localStorage.setItem('dev_portfolio_whatsapp', supabaseData.whatsapp);
+        }
+        if (supabaseData.pdfData) {
+          localStorage.setItem('dev_portfolio_resume_pdf', supabaseData.pdfData);
+        }
         return;
       }
     } catch (error) {

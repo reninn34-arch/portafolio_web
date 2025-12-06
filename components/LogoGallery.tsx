@@ -20,26 +20,37 @@ export const LogoGallery: React.FC<LogoGalleryProps> = ({ isAdmin }) => {
 
   // Load from LocalStorage on mount
   useEffect(() => {
-    const savedLogos = localStorage.getItem('dev_portfolio_logos');
-    if (savedLogos) {
-      try {
-        const parsed: LogoItem[] = JSON.parse(savedLogos);
-        setLogos(parsed.map((item) => ({
-          ...item,
-          link: item.link ? normalizeLink(item.link) : undefined,
-        })));
-      } catch (e) {
-        console.error("Error parsing logos", e);
+    const loadLogos = async () => {
+      // Try localStorage first
+      const savedLogos = localStorage.getItem('dev_portfolio_logos');
+      if (savedLogos) {
+        try {
+          const parsed: LogoItem[] = JSON.parse(savedLogos);
+          if (parsed && parsed.length > 0) {
+            setLogos(parsed.map((item) => ({
+              ...item,
+              link: item.link ? normalizeLink(item.link) : undefined,
+            })));
+            return;
+          }
+        } catch (e) {
+          console.error("Error parsing logos", e);
+        }
       }
-    } else {
-        // Default initial data for developers
-        setLogos([
-            { id: '1', title: 'E-Commerce Platform', imageUrl: 'https://picsum.photos/400/300?random=10', date: '2023-10-01', link: 'https://example.com/shop' },
-            { id: '2', title: 'Task Management App', imageUrl: 'https://picsum.photos/400/400?random=11', date: '2023-11-15', link: 'https://example.com/tasks' },
-            { id: '3', title: 'Social Network MVP', imageUrl: 'https://picsum.photos/400/300?random=12', date: '2024-01-20', link: 'https://example.com/social' },
-            { id: '4', title: 'AI Chat Dashboard', imageUrl: 'https://picsum.photos/400/400?random=13', date: '2024-02-10', link: 'https://example.com/chat' },
-        ]);
-    }
+      
+      // If no logos in localStorage, use defaults
+      const defaultLogos: LogoItem[] = [
+        { id: '1', title: 'E-Commerce Platform', imageUrl: 'https://picsum.photos/400/300?random=10', date: '2023-10-01', link: 'https://example.com/shop' },
+        { id: '2', title: 'Task Management App', imageUrl: 'https://picsum.photos/400/400?random=11', date: '2023-11-15', link: 'https://example.com/tasks' },
+        { id: '3', title: 'Social Network MVP', imageUrl: 'https://picsum.photos/400/300?random=12', date: '2024-01-20', link: 'https://example.com/social' },
+        { id: '4', title: 'AI Chat Dashboard', imageUrl: 'https://picsum.photos/400/400?random=13', date: '2024-02-10', link: 'https://example.com/chat' },
+      ];
+      setLogos(defaultLogos);
+      localStorage.setItem('dev_portfolio_logos', JSON.stringify(defaultLogos));
+      await syncToSupabase('dev_portfolio_logos', defaultLogos);
+    };
+    
+    loadLogos();
   }, []);
 
   // Save to LocalStorage and Supabase whenever logos change
