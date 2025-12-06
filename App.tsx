@@ -5,7 +5,6 @@ import { Brands } from './components/Brands';
 import { LogoGallery } from './components/LogoGallery';
 import { Resume } from './components/Resume';
 import { FloatingWhatsApp } from './components/FloatingWhatsApp';
-import { Contact } from './components/Contact';
 import { Experience, Education, Skill } from './types';
 import { fetchPortfolioDataFromGitHub, savePortfolioDataToGitHub } from './services/githubService';
 import { fetchPortfolioFromSupabase, savePortfolioToSupabase, initializePortfolio } from './services/supabaseService';
@@ -397,9 +396,6 @@ const App: React.FC = () => {
         onUpdateEducation={updateEducation}
         onUpdateSkills={updateSkills}
       />
-
-      {/* Contact Section */}
-      <Contact isAdmin={isAdmin} />
 
       <footer className="bg-slate-900 text-slate-400 py-10 text-center relative z-10">
         <p>© {new Date().getFullYear()} {ownerName}. Software Developer Portfolio. Todos los derechos reservados.</p>

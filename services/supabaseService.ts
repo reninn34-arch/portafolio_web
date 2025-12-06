@@ -38,6 +38,15 @@ export const fetchPortfolioFromSupabase = async (): Promise<PortfolioData | null
       return null;
     }
 
+    // Map snake_case to camelCase for JavaScript
+    if (data) {
+      return {
+        ...data,
+        heroContent: data.hero_content,
+        pdfData: data.pdf_data,
+      };
+    }
+
     return data;
   } catch (e) {
     console.error('Error in fetchPortfolioFromSupabase:', e);
@@ -48,6 +57,19 @@ export const fetchPortfolioFromSupabase = async (): Promise<PortfolioData | null
 // Save portfolio data to Supabase
 export const savePortfolioToSupabase = async (portfolioData: Partial<PortfolioData>): Promise<boolean> => {
   try {
+    // Map camelCase to snake_case for database columns - only include defined values
+    const dbData: any = {};
+    
+    if (portfolioData.experiences !== undefined) dbData.experiences = portfolioData.experiences;
+    if (portfolioData.education !== undefined) dbData.education = portfolioData.education;
+    if (portfolioData.skills !== undefined) dbData.skills = portfolioData.skills;
+    if (portfolioData.logos !== undefined) dbData.logos = portfolioData.logos;
+    if (portfolioData.brands !== undefined) dbData.brands = portfolioData.brands;
+    if (portfolioData.socials !== undefined) dbData.socials = portfolioData.socials;
+    if (portfolioData.heroContent !== undefined) dbData.hero_content = portfolioData.heroContent;
+    if (portfolioData.whatsapp !== undefined) dbData.whatsapp = portfolioData.whatsapp;
+    if (portfolioData.pdfData !== undefined) dbData.pdf_data = portfolioData.pdfData;
+
     // Check if record exists
     const { data: existing } = await supabase
       .from('portfolio')
@@ -62,7 +84,7 @@ export const savePortfolioToSupabase = async (portfolioData: Partial<PortfolioDa
       result = await supabase
         .from('portfolio')
         .update({
-          ...portfolioData,
+          ...dbData,
           updated_at: new Date().toISOString()
         })
         .eq('id', existing.id);
@@ -71,7 +93,7 @@ export const savePortfolioToSupabase = async (portfolioData: Partial<PortfolioDa
       result = await supabase
         .from('portfolio')
         .insert([{
-          ...portfolioData,
+          ...dbData,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }]);
