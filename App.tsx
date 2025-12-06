@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, Unlock, X, Download, Upload } from 'lucide-react';
+import { Lock, Unlock, X, Download, Upload, Cloud } from 'lucide-react';
 import { Hero } from './components/Hero';
 import { Brands } from './components/Brands';
 import { LogoGallery } from './components/LogoGallery';
@@ -7,18 +7,27 @@ import { Resume } from './components/Resume';
 import { FloatingWhatsApp } from './components/FloatingWhatsApp';
 import { Contact } from './components/Contact';
 import { Experience, Education, Skill } from './types';
+import { fetchPortfolioDataFromGitHub, savePortfolioDataToGitHub } from './services/githubService';
 
 const App: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [githubToken, setGithubToken] = useState('');
+  const [showTokenModal, setShowTokenModal] = useState(false);
 
   // Check if admin session exists on load
   useEffect(() => {
     const adminSession = sessionStorage.getItem('isAdmin');
     if (adminSession === 'true') {
       setIsAdmin(true);
+    }
+    
+    // Load token from localStorage if saved
+    const savedToken = localStorage.getItem('github_token');
+    if (savedToken) {
+      setGithubToken(savedToken);
     }
   }, []);
 
@@ -192,6 +201,58 @@ const App: React.FC = () => {
     reader.readAsText(file);
   };
 
+  // Save to GitHub
+  const handleSaveToGitHub = async () => {
+    if (!githubToken) {
+      alert('Primero agrega tu token de GitHub');
+      setShowTokenModal(true);
+      return;
+    }
+
+    const allData = {
+      experiences,
+      education,
+      skills,
+      socials: JSON.parse(localStorage.getItem('dev_portfolio_socials') || '{}'),
+      logos: JSON.parse(localStorage.getItem('dev_portfolio_logos') || '[]'),
+      heroContent: JSON.parse(localStorage.getItem('dev_portfolio_hero_content') || '{}')
+    };
+
+    const success = await savePortfolioDataToGitHub(
+      allData,
+      githubToken,
+      `Update portfolio data - ${new Date().toLocaleString()}`
+    );
+
+    if (success) {
+      alert('✅ Datos guardados en GitHub exitosamente');
+    } else {
+      alert('❌ Error al guardar. Verifica tu token de GitHub.');
+    }
+  };
+
+  // Load from GitHub
+  const handleLoadFromGitHub = async () => {
+    const data = await fetchPortfolioDataFromGitHub();
+    if (data) {
+      localStorage.setItem('dev_portfolio_experiences', JSON.stringify(data.experiences || []));
+      localStorage.setItem('dev_portfolio_education', JSON.stringify(data.education || []));
+      localStorage.setItem('dev_portfolio_skills', JSON.stringify(data.skills || []));
+      localStorage.setItem('dev_portfolio_socials', JSON.stringify(data.socials || {}));
+      localStorage.setItem('dev_portfolio_logos', JSON.stringify(data.logos || []));
+      localStorage.setItem('dev_portfolio_heroContent', JSON.stringify(data.heroContent || {}));
+      
+      setExperiences(data.experiences);
+      setEducation(data.education);
+      setSkills(data.skills);
+      
+      alert('✅ Datos cargados desde GitHub');
+      window.location.reload();
+    } else {
+      alert('❌ No se pudo cargar los datos de GitHub');
+    }
+  };
+
   return (
     <div className="font-sans antialiased text-slate-800 bg-slate-50 selection:bg-blue-200 selection:text-blue-900">
       <Hero isAdmin={isAdmin} />
@@ -243,6 +304,32 @@ const App: React.FC = () => {
                   className="hidden"
                 />
               </label>
+
+              <button
+                onClick={handleSaveToGitHub}
+                className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-purple-400 transition-colors p-2 border border-slate-600 rounded hover:border-purple-400"
+                title="Guardar en GitHub"
+              >
+                <Cloud size={14} />
+                Guardar GitHub
+              </button>
+
+              <button
+                onClick={handleLoadFromGitHub}
+                className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-cyan-400 transition-colors p-2 border border-slate-600 rounded hover:border-cyan-400"
+                title="Cargar desde GitHub"
+              >
+                <Cloud size={14} />
+                Cargar GitHub
+              </button>
+
+              <button
+                onClick={() => setShowTokenModal(true)}
+                className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-yellow-400 transition-colors p-2 border border-slate-600 rounded hover:border-yellow-400"
+                title="Configurar token"
+              >
+                🔑 Token
+              </button>
             </>
           )}
         </div>
@@ -302,6 +389,60 @@ const App: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* GitHub Token Modal */}
+      {showTokenModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="font-bold text-slate-800">GitHub Token</h3>
+              <button onClick={() => setShowTokenModal(false)} className="text-slate-400 hover:text-slate-600">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6">
+              <p className="text-sm text-slate-600 mb-4">
+                Necesitas un token personal de GitHub para sincronizar datos.
+              </p>
+              <a 
+                href="https://github.com/settings/tokens/new?scopes=repo&description=Portfolio%20Sync" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 text-sm underline mb-4 block"
+              >
+                1. Crea un token aquí (repo scope)
+              </a>
+              <input
+                type="password"
+                value={githubToken}
+                onChange={(e) => setGithubToken(e.target.value)}
+                placeholder="Pega tu token aquí"
+                className="w-full border border-slate-300 rounded-lg p-2.5 text-sm mb-4"
+              />
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    if (githubToken) {
+                      localStorage.setItem('github_token', githubToken);
+                      alert('✅ Token guardado');
+                      setShowTokenModal(false);
+                    }
+                  }}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+                >
+                  Guardar
+                </button>
+                <button
+                  onClick={() => setShowTokenModal(false)}
+                  className="flex-1 px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

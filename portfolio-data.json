@@ -1,0 +1,52 @@
+{
+  "experiences": [
+    {
+      "id": "1",
+      "role": "Senior Full Stack Developer",
+      "company": "Freelance / Clientes USA & LatAm",
+      "period": "Jul 2024 - Presente",
+      "description": "Delivery end-to-end de productos web con Next.js 14, React y Tailwind; APIs en Node.js/Express con PostgreSQL y Redis; CI/CD en GitHub Actions y despliegue en Vercel/Docker. Integración de Google Ads API para campañas programáticas. Mentoría a devs junior y definición de arquitectura."
+    },
+    {
+      "id": "2",
+      "role": "Full Stack Engineer",
+      "company": "SaaS B2B de analítica",
+      "period": "Ene 2024 - Jun 2024",
+      "description": "Construí dashboards en React/TypeScript y APIs en NestJS con PostgreSQL + Prisma. Implementé autenticación con JWT/OAuth, colas con BullMQ y observabilidad con logs y métricas. Reduje tiempos de respuesta de 900ms a 250ms."
+    },
+    {
+      "id": "3",
+      "role": "Frontend Developer",
+      "company": "Agencia digital",
+      "period": "2023",
+      "description": "Maquetación y performance para landing pages y micrositios en React y Next.js. SEO técnico, accesibilidad y optimización de Core Web Vitals. Integraciones con CMS headless y APIs de pago."
+    }
+  ],
+  "education": [
+    {
+      "id": "1",
+      "degree": "Ingeniería en Sistemas/Informática",
+      "institution": "Universidad Nacional",
+      "year": "2019"
+    },
+    {
+      "id": "2",
+      "degree": "Full Stack Web Development",
+      "institution": "Udemy / Codecademy",
+      "year": "2021"
+    }
+  ],
+  "skills": [
+    { "name": "React / Next.js", "level": 95 },
+    { "name": "TypeScript", "level": 90 },
+    { "name": "Node.js / Express", "level": 90 },
+    { "name": "PostgreSQL / MongoDB", "level": 85 },
+    { "name": "AWS / Cloud", "level": 80 },
+    { "name": "Docker / Kubernetes", "level": 75 },
+    { "name": "Git / GitHub", "level": 95 },
+    { "name": "REST APIs / GraphQL", "level": 90 }
+  ],
+  "logos": [],
+  "socials": {},
+  "heroContent": {}
+}
