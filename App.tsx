@@ -17,18 +17,45 @@ const App: React.FC = () => {
   const [githubToken, setGithubToken] = useState('');
   const [showTokenModal, setShowTokenModal] = useState(false);
 
-  // Check if admin session exists on load
+  // Check admin session and load data from GitHub JSON on mount
   useEffect(() => {
     const adminSession = sessionStorage.getItem('isAdmin');
     if (adminSession === 'true') {
       setIsAdmin(true);
     }
-    
-    // Load token from localStorage if saved
+
     const savedToken = localStorage.getItem('github_token');
     if (savedToken) {
       setGithubToken(savedToken);
     }
+
+    // Always try to load from GitHub JSON first
+    fetchPortfolioDataFromGitHub()
+      .then((data) => {
+        if (!data) return;
+        
+        setExperiences(data.experiences || defaultExperiences);
+        setEducation(data.education || defaultEducation);
+        setSkills(data.skills || defaultSkills);
+        
+        // Also update localStorage for admin edits
+        localStorage.setItem('dev_portfolio_experiences', JSON.stringify(data.experiences || []));
+        localStorage.setItem('dev_portfolio_education', JSON.stringify(data.education || []));
+        localStorage.setItem('dev_portfolio_skills', JSON.stringify(data.skills || []));
+        localStorage.setItem('dev_portfolio_socials', JSON.stringify(data.socials || {}));
+        localStorage.setItem('dev_portfolio_logos', JSON.stringify(data.logos || []));
+        localStorage.setItem('dev_portfolio_hero_content', JSON.stringify(data.heroContent || {}));
+      })
+      .catch(() => {
+        // Fallback to localStorage if GitHub fails
+        const savedExp = localStorage.getItem('dev_portfolio_experiences');
+        const savedEdu = localStorage.getItem('dev_portfolio_education');
+        const savedSkills = localStorage.getItem('dev_portfolio_skills');
+        
+        if (savedExp) setExperiences(JSON.parse(savedExp));
+        if (savedEdu) setEducation(JSON.parse(savedEdu));
+        if (savedSkills) setSkills(JSON.parse(savedSkills));
+      });
   }, []);
 
   const handleLockClick = () => {
@@ -107,21 +134,10 @@ const App: React.FC = () => {
     { name: 'REST APIs / GraphQL', level: 90 }
   ];
 
-  // State for resume data
-  const [experiences, setExperiences] = useState<Experience[]>(() => {
-    const saved = localStorage.getItem('dev_portfolio_experiences');
-    return saved ? JSON.parse(saved) : defaultExperiences;
-  });
-
-  const [education, setEducation] = useState<Education[]>(() => {
-    const saved = localStorage.getItem('dev_portfolio_education');
-    return saved ? JSON.parse(saved) : defaultEducation;
-  });
-
-  const [skills, setSkills] = useState<Skill[]>(() => {
-    const saved = localStorage.getItem('dev_portfolio_skills');
-    return saved ? JSON.parse(saved) : defaultSkills;
-  });
+  // State for resume data - start with defaults, will be overwritten by GitHub data
+  const [experiences, setExperiences] = useState<Experience[]>(defaultExperiences);
+  const [education, setEducation] = useState<Education[]>(defaultEducation);
+  const [skills, setSkills] = useState<Skill[]>(defaultSkills);
 
   // Update handlers
   const updateExperiences = (newExperiences: Experience[]) => {
@@ -240,7 +256,7 @@ const App: React.FC = () => {
       localStorage.setItem('dev_portfolio_skills', JSON.stringify(data.skills || []));
       localStorage.setItem('dev_portfolio_socials', JSON.stringify(data.socials || {}));
       localStorage.setItem('dev_portfolio_logos', JSON.stringify(data.logos || []));
-      localStorage.setItem('dev_portfolio_heroContent', JSON.stringify(data.heroContent || {}));
+      localStorage.setItem('dev_portfolio_hero_content', JSON.stringify(data.heroContent || {}));
       
       setExperiences(data.experiences);
       setEducation(data.education);
