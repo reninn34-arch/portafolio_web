@@ -83,7 +83,21 @@ export const Hero: React.FC<HeroProps> = ({ isAdmin }) => {
   useEffect(() => {
     const savedHeroContent = localStorage.getItem('dev_portfolio_hero_content');
     if (savedHeroContent) {
-      setHeroContent(JSON.parse(savedHeroContent));
+      const parsed = JSON.parse(savedHeroContent);
+      // If description is empty or default old text, use new default
+      if (!parsed.description || parsed.description.includes('arquitectura de software')) {
+        const updatedContent = { ...defaultHeroContent, ...parsed, description: defaultHeroContent.description };
+        setHeroContent(updatedContent);
+        localStorage.setItem('dev_portfolio_hero_content', JSON.stringify(updatedContent));
+        syncToSupabase('dev_portfolio_hero_content', updatedContent);
+      } else {
+        setHeroContent(parsed);
+      }
+    } else {
+      // Save default if nothing exists
+      setHeroContent(defaultHeroContent);
+      localStorage.setItem('dev_portfolio_hero_content', JSON.stringify(defaultHeroContent));
+      syncToSupabase('dev_portfolio_hero_content', defaultHeroContent);
     }
   }, []);
 

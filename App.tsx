@@ -41,14 +41,42 @@ const App: React.FC = () => {
       
       if (supabaseData) {
         console.log('✅ Datos cargados desde Supabase');
-        setExperiences(supabaseData.experiences || defaultExperiences);
-        setEducation(supabaseData.education || defaultEducation);
-        setSkills(supabaseData.skills || defaultSkills);
+        
+        // Use default values if Supabase has empty arrays
+        const experiences = (supabaseData.experiences && supabaseData.experiences.length > 0) 
+          ? supabaseData.experiences 
+          : defaultExperiences;
+        const education = (supabaseData.education && supabaseData.education.length > 0) 
+          ? supabaseData.education 
+          : defaultEducation;
+        const skills = (supabaseData.skills && supabaseData.skills.length > 0) 
+          ? supabaseData.skills 
+          : defaultSkills;
+        
+        setExperiences(experiences);
+        setEducation(education);
+        setSkills(skills);
+        
+        // If we used defaults, save them to Supabase
+        if (experiences === defaultExperiences || education === defaultEducation || skills === defaultSkills) {
+          console.log('⚠️ Inicializando Supabase con datos por defecto');
+          await savePortfolioToSupabase({
+            experiences,
+            education,
+            skills,
+            socials: supabaseData.socials || {},
+            logos: supabaseData.logos || [],
+            brands: supabaseData.brands || [],
+            heroContent: supabaseData.heroContent || {},
+            whatsapp: supabaseData.whatsapp || '',
+            pdfData: supabaseData.pdfData || ''
+          });
+        }
         
         // Update localStorage cache
-        localStorage.setItem('dev_portfolio_experiences', JSON.stringify(supabaseData.experiences || []));
-        localStorage.setItem('dev_portfolio_education', JSON.stringify(supabaseData.education || []));
-        localStorage.setItem('dev_portfolio_skills', JSON.stringify(supabaseData.skills || []));
+        localStorage.setItem('dev_portfolio_experiences', JSON.stringify(experiences));
+        localStorage.setItem('dev_portfolio_education', JSON.stringify(education));
+        localStorage.setItem('dev_portfolio_skills', JSON.stringify(skills));
         localStorage.setItem('dev_portfolio_socials', JSON.stringify(supabaseData.socials || {}));
         localStorage.setItem('dev_portfolio_logos', JSON.stringify(supabaseData.logos || []));
         localStorage.setItem('dev_portfolio_hero_content', JSON.stringify(supabaseData.heroContent || {}));
