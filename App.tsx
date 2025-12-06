@@ -29,10 +29,8 @@ const App: React.FC = () => {
       setGithubToken(savedToken);
     }
 
-    // Delay Supabase load to let components initialize first
-    setTimeout(() => {
-      loadPortfolioData();
-    }, 500);
+    // Load immediately without delay
+    loadPortfolioData();
   }, []);
 
   // Load portfolio data from Supabase or fallback sources
@@ -42,9 +40,22 @@ const App: React.FC = () => {
     const localEdu = localStorage.getItem('dev_portfolio_education');
     const localSkills = localStorage.getItem('dev_portfolio_skills');
     
-    if (localExp) setExperiences(JSON.parse(localExp));
-    if (localEdu) setEducation(JSON.parse(localEdu));
-    if (localSkills) setSkills(JSON.parse(localSkills));
+    // If localStorage has data, use it immediately
+    if (localExp && localEdu && localSkills) {
+      setExperiences(JSON.parse(localExp));
+      setEducation(JSON.parse(localEdu));
+      setSkills(JSON.parse(localSkills));
+    } else {
+      // If no localStorage, use defaults immediately
+      setExperiences(defaultExperiences);
+      setEducation(defaultEducation);
+      setSkills(defaultSkills);
+      
+      // Save defaults to localStorage
+      localStorage.setItem('dev_portfolio_experiences', JSON.stringify(defaultExperiences));
+      localStorage.setItem('dev_portfolio_education', JSON.stringify(defaultEducation));
+      localStorage.setItem('dev_portfolio_skills', JSON.stringify(defaultSkills));
+    }
     
     // Then sync with Supabase in background
     try {
@@ -54,7 +65,7 @@ const App: React.FC = () => {
       if (supabaseData) {
         console.log('✅ Sincronizando con Supabase');
         
-        // Use default values if Supabase has empty arrays
+        // Use Supabase data if it has content, otherwise keep what we loaded
         const experiences = (supabaseData.experiences && supabaseData.experiences.length > 0) 
           ? supabaseData.experiences 
           : (localExp ? JSON.parse(localExp) : defaultExperiences);
@@ -65,19 +76,25 @@ const App: React.FC = () => {
           ? supabaseData.skills 
           : (localSkills ? JSON.parse(localSkills) : defaultSkills);
         
-        setExperiences(experiences);
-        setEducation(education);
-        setSkills(skills);
+        // Only update state if Supabase has different/better data
+        if (JSON.stringify(experiences) !== JSON.stringify(localExp ? JSON.parse(localExp) : defaultExperiences)) {
+          setExperiences(experiences);
+        }
+        if (JSON.stringify(education) !== JSON.stringify(localEdu ? JSON.parse(localEdu) : defaultEducation)) {
+          setEducation(education);
+        }
+        if (JSON.stringify(skills) !== JSON.stringify(localSkills ? JSON.parse(localSkills) : defaultSkills)) {
+          setSkills(skills);
+        }
         
-        // If we used defaults, save them to Supabase
-        if ((experiences === defaultExperiences && !localExp) || 
-            (education === defaultEducation && !localEdu) || 
-            (skills === defaultSkills && !localSkills)) {
+        // If Supabase is empty, save our defaults to it
+        if ((!supabaseData.experiences || supabaseData.experiences.length === 0) && 
+            (!supabaseData.education || supabaseData.education.length === 0)) {
           console.log('⚠️ Inicializando Supabase con datos por defecto');
           await savePortfolioToSupabase({
-            experiences,
-            education,
-            skills,
+            experiences: defaultExperiences,
+            education: defaultEducation,
+            skills: defaultSkills,
             socials: supabaseData.socials || {},
             logos: supabaseData.logos || [],
             brands: supabaseData.brands || [],

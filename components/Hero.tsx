@@ -29,7 +29,7 @@ export const Hero: React.FC<HeroProps> = ({ isAdmin }) => {
   // Default hero content
   const defaultHeroContent: HeroContent = {
     title: 'Full Stack Developer',
-    name: 'Alex',
+    name: 'Erik',
     description: 'Desarrollador especializado en React, TypeScript y aplicaciones web modernas. Experiencia en e-commerce, portafolios interactivos y soluciones SaaS con Supabase, PostgreSQL y APIs REST.',
     profilePhoto: '',
     backgroundType: 'gradient',
@@ -83,15 +83,29 @@ export const Hero: React.FC<HeroProps> = ({ isAdmin }) => {
   useEffect(() => {
     const savedHeroContent = localStorage.getItem('dev_portfolio_hero_content');
     if (savedHeroContent) {
-      const parsed = JSON.parse(savedHeroContent);
-      // If description is empty or default old text, use new default
-      if (!parsed.description || parsed.description.includes('arquitectura de software')) {
-        const updatedContent = { ...defaultHeroContent, ...parsed, description: defaultHeroContent.description };
-        setHeroContent(updatedContent);
-        localStorage.setItem('dev_portfolio_hero_content', JSON.stringify(updatedContent));
-        syncToSupabase('dev_portfolio_hero_content', updatedContent);
-      } else {
-        setHeroContent(parsed);
+      try {
+        const parsed = JSON.parse(savedHeroContent);
+        // Merge saved data with defaults (defaults for missing fields)
+        const merged = { ...defaultHeroContent, ...parsed };
+        
+        // Always use default name if saved name is "Alex"
+        if (merged.name === 'Alex') {
+          merged.name = 'Erik';
+        }
+        
+        // If description is empty or old default, use new default
+        if (!merged.description || merged.description.includes('arquitectura de software')) {
+          merged.description = defaultHeroContent.description;
+        }
+        
+        setHeroContent(merged);
+        
+        // Update localStorage with merged content
+        localStorage.setItem('dev_portfolio_hero_content', JSON.stringify(merged));
+        syncToSupabase('dev_portfolio_hero_content', merged);
+      } catch (e) {
+        console.error('Error parsing hero content', e);
+        setHeroContent(defaultHeroContent);
       }
     } else {
       // Save default if nothing exists
