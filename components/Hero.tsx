@@ -128,15 +128,44 @@ export const Hero: React.FC<HeroProps> = ({ isAdmin }) => {
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      alert('La imagen es demasiado pesada. El máximo es 2MB.');
+    if (file.size > 5 * 1024 * 1024) {
+      alert('La imagen es demasiado pesada. El máximo es 5MB.');
       return;
     }
 
+    const img = new Image();
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setTempHeroContent(prev => ({ ...prev, profilePhoto: reader.result as string }));
+    
+    reader.onload = (event) => {
+      img.src = event.target?.result as string;
+      
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        
+        const maxSize = 500;
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > height && width > maxSize) {
+          height = (height * maxSize) / width;
+          width = maxSize;
+        } else if (height > maxSize) {
+          width = (width * maxSize) / height;
+          height = maxSize;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressed = canvas.toDataURL('image/jpeg', 0.8);
+        
+        setTempHeroContent(prev => ({ ...prev, profilePhoto: compressed }));
+        console.log('✅ Foto de perfil comprimida');
+      };
     };
+    
     reader.readAsDataURL(file);
   };
 
@@ -149,19 +178,48 @@ export const Hero: React.FC<HeroProps> = ({ isAdmin }) => {
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      alert('La imagen es demasiado pesada. El máximo es 2MB.');
+    if (file.size > 5 * 1024 * 1024) {
+      alert('La imagen es demasiado pesada. El máximo es 5MB.');
       return;
     }
 
+    const img = new Image();
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setTempHeroContent(prev => ({
-        ...prev,
-        backgroundImage: reader.result as string,
-        backgroundType: 'image'
-      }));
+    
+    reader.onload = (event) => {
+      img.src = event.target?.result as string;
+      
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        
+        const maxSize = 1200;
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > height && width > maxSize) {
+          height = (height * maxSize) / width;
+          width = maxSize;
+        } else if (height > maxSize) {
+          width = (width * maxSize) / height;
+          height = maxSize;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressed = canvas.toDataURL('image/jpeg', 0.75);
+        
+        setTempHeroContent(prev => ({
+          ...prev,
+          backgroundImage: compressed,
+          backgroundType: 'image'
+        }));
+        console.log('✅ Imagen de fondo comprimida');
+      };
     };
+    
     reader.readAsDataURL(file);
   };
 

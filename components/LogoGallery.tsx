@@ -73,28 +73,72 @@ export const LogoGallery: React.FC<LogoGalleryProps> = ({ isAdmin }) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) { // 2MB limit
-      alert("El archivo es demasiado grande. Por favor usa una imagen menor a 2MB para evitar llenar el almacenamiento local.");
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit for original file
+      alert("El archivo es demasiado grande. Por favor usa una imagen menor a 5MB.");
       return;
     }
 
+    // Compress image before storing
+    const img = new Image();
     const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64String = reader.result as string;
-      const linkValue = newLink.trim() ? normalizeLink(newLink.trim()) : undefined;
-      const titleValue = newTitle.trim() || file.name.split('.')[0] || 'Proyecto';
-      const newLogo: LogoItem = {
-        id: Date.now().toString(),
-        title: titleValue,
-        imageUrl: base64String,
-        date: new Date().toISOString().split('T')[0],
-        link: linkValue,
+    
+    reader.onload = (e) => {
+      img.src = e.target?.result as string;
+      
+      img.onload = () => {
+        // Create canvas for compression
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        
+        // Calculate new dimensions (max 800px width/height)
+        const maxSize = 800;
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > height && width > maxSize) {
+          height = (height * maxSize) / width;
+          width = maxSize;
+        } else if (height > maxSize) {
+          width = (width * maxSize) / height;
+          height = maxSize;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Draw and compress
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7); // 70% quality
+        
+        // Check final size
+        const sizeInBytes = (compressedBase64.length * 3) / 4;
+        const sizeInKB = sizeInBytes / 1024;
+        
+        if (sizeInKB > 500) {
+          alert(`La imagen comprimida aún es muy grande (${Math.round(sizeInKB)}KB). Intenta con una imagen más pequeña.`);
+          return;
+        }
+        
+        const linkValue = newLink.trim() ? normalizeLink(newLink.trim()) : undefined;
+        const titleValue = newTitle.trim() || file.name.split('.')[0] || 'Proyecto';
+        const newLogo: LogoItem = {
+          id: Date.now().toString(),
+          title: titleValue,
+          imageUrl: compressedBase64,
+          date: new Date().toISOString().split('T')[0],
+          link: linkValue,
+        };
+        
+        setLogos(prev => [newLogo, ...prev]);
+        setIsUploading(false);
+        setNewTitle('');
+        setNewLink('');
+        
+        console.log(`✅ Imagen comprimida: ${Math.round(sizeInKB)}KB`);
       };
-      setLogos(prev => [newLogo, ...prev]);
-      setIsUploading(false);
-      setNewTitle('');
-      setNewLink('');
     };
+    
     reader.readAsDataURL(file);
   };
 
