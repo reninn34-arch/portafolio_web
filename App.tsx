@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, Unlock, X } from 'lucide-react';
+import { Lock, Unlock, X, Download, Upload } from 'lucide-react';
 import { Hero } from './components/Hero';
 import { Brands } from './components/Brands';
 import { LogoGallery } from './components/LogoGallery';
@@ -132,6 +132,66 @@ const App: React.FC = () => {
 
   const ownerName = "Alex";
 
+  // Export all data as JSON
+  const handleExportData = () => {
+    const allData = {
+      experiences,
+      education,
+      skills,
+      socials: JSON.parse(localStorage.getItem('dev_portfolio_socials') || '{}'),
+      logos: JSON.parse(localStorage.getItem('dev_portfolio_logos') || '[]'),
+      heroContent: JSON.parse(localStorage.getItem('dev_portfolio_hero_content') || '{}'),
+      exportDate: new Date().toISOString()
+    };
+    
+    const dataStr = JSON.stringify(allData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `portfolio_data_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Import data from JSON
+  const handleImportData = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      try {
+        const data = JSON.parse(reader.result as string);
+        
+        // Load all data into localStorage
+        if (data.experiences) {
+          localStorage.setItem('dev_portfolio_experiences', JSON.stringify(data.experiences));
+          setExperiences(data.experiences);
+        }
+        if (data.education) {
+          localStorage.setItem('dev_portfolio_education', JSON.stringify(data.education));
+          setEducation(data.education);
+        }
+        if (data.skills) {
+          localStorage.setItem('dev_portfolio_skills', JSON.stringify(data.skills));
+          setSkills(data.skills);
+        }
+        if (data.socials) localStorage.setItem('dev_portfolio_socials', JSON.stringify(data.socials));
+        if (data.logos) localStorage.setItem('dev_portfolio_logos', JSON.stringify(data.logos));
+        if (data.heroContent) localStorage.setItem('dev_portfolio_hero_content', JSON.stringify(data.heroContent));
+        
+        alert('✅ Datos importados correctamente. Recarga la página para ver los cambios.');
+        window.location.reload();
+      } catch (e) {
+        alert('❌ Error al importar. Asegúrate de que el archivo JSON es válido.');
+      }
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <div className="font-sans antialiased text-slate-800 bg-slate-50 selection:bg-blue-200 selection:text-blue-900">
       <Hero isAdmin={isAdmin} />
@@ -159,6 +219,33 @@ const App: React.FC = () => {
       <footer className="bg-slate-900 text-slate-400 py-10 text-center relative z-10">
         <p>© {new Date().getFullYear()} {ownerName}. Software Developer Portfolio. Todos los derechos reservados.</p>
         <p className="text-sm mt-2 mb-4">Full Stack Developer | React | Node.js | Cloud</p>
+
+        <div className="flex justify-center gap-3 mt-6 mb-4">
+          {/* Admin Data Tools */}
+          {isAdmin && (
+            <>
+              <button
+                onClick={handleExportData}
+                className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-green-400 transition-colors p-2 border border-slate-600 rounded hover:border-green-400"
+                title="Descargar datos como JSON"
+              >
+                <Download size={14} />
+                Exportar
+              </button>
+              
+              <label className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-blue-400 transition-colors p-2 border border-slate-600 rounded hover:border-blue-400 cursor-pointer">
+                <Upload size={14} />
+                Importar
+                <input
+                  type="file"
+                  accept="application/json"
+                  onChange={handleImportData}
+                  className="hidden"
+                />
+              </label>
+            </>
+          )}
+        </div>
 
         {/* Admin Toggle Button */}
         <button
