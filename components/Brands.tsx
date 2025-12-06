@@ -13,14 +13,20 @@ interface Brand {
 }
 
 export const Brands: React.FC<BrandsProps> = ({ isAdmin }) => {
-    const [brands, setBrands] = useState<Brand[]>([
+    const defaultBrands: Brand[] = [
         { id: '1', name: 'React', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg' },
-        { id: '2', name: 'Node.js', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nodejs/nodejs-original.svg' },
-        { id: '3', name: 'TypeScript', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/typescript/typescript-original.svg' },
+        { id: '2', name: 'TypeScript', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/typescript/typescript-original.svg' },
+        { id: '3', name: 'Vite', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/vitejs/vitejs-original.svg' },
         { id: '4', name: 'PostgreSQL', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/postgresql/postgresql-original.svg' },
-        { id: '5', name: 'Docker', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/docker/docker-original.svg' },
-        { id: '6', name: 'Next.js', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nextjs/nextjs-original.svg' },
-    ]);
+        { id: '5', name: 'Supabase', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/supabase/supabase-original.svg' },
+        { id: '6', name: 'Material-UI', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/materialui/materialui-original.svg' },
+        { id: '7', name: 'HTML5', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg' },
+        { id: '8', name: 'CSS3', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/css3/css3-original.svg' },
+        { id: '9', name: 'Git', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/git/git-original.svg' },
+        { id: '10', name: 'GitHub', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/github/github-original.svg' },
+    ];
+    
+    const [brands, setBrands] = useState<Brand[]>(defaultBrands);
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingBrand, setEditingBrand] = useState<string | null>(null);
     const [brandForm, setBrandForm] = useState<Brand>({ id: '', name: '', logo: '' });
@@ -29,7 +35,20 @@ export const Brands: React.FC<BrandsProps> = ({ isAdmin }) => {
     useEffect(() => {
         const savedBrands = localStorage.getItem('dev_portfolio_brands');
         if (savedBrands) {
-            setBrands(JSON.parse(savedBrands));
+            const parsed = JSON.parse(savedBrands);
+            // Use default brands if saved is empty
+            if (parsed && parsed.length > 0) {
+                setBrands(parsed);
+            } else {
+                setBrands(defaultBrands);
+                // Save defaults
+                localStorage.setItem('dev_portfolio_brands', JSON.stringify(defaultBrands));
+                syncToSupabase('dev_portfolio_brands', defaultBrands);
+            }
+        } else {
+            // Save defaults if nothing exists
+            localStorage.setItem('dev_portfolio_brands', JSON.stringify(defaultBrands));
+            syncToSupabase('dev_portfolio_brands', defaultBrands);
         }
     }, []);
 
