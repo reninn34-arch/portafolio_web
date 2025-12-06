@@ -30,7 +30,7 @@ export const Hero: React.FC<HeroProps> = ({ isAdmin }) => {
   const defaultHeroContent: HeroContent = {
     title: 'Full Stack Developer',
     name: 'Alex',
-    description: 'Desarrollo de aplicaciones web modernas con React, Node.js y tecnologías cloud. Especializado en arquitectura de software, APIs REST y microservicios.',
+    description: 'Desarrollador especializado en React, TypeScript y aplicaciones web modernas. Experiencia en e-commerce, portafolios interactivos y soluciones SaaS con Supabase, PostgreSQL y APIs REST.',
     profilePhoto: '',
     backgroundType: 'gradient',
     gradientFrom: '#0f172a', // slate-900
