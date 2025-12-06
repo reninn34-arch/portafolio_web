@@ -462,7 +462,7 @@ export const Hero: React.FC<HeroProps> = ({ isAdmin }) => {
                       name="name"
                       value={tempHeroContent.name}
                       onChange={handleHeroInputChange}
-                      placeholder="Lady Mosquera"
+                      placeholder="Erik Aguirre"
                       className="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 text-white focus:border-pink-500 outline-none"
                     />
                   </div>
