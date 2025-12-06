@@ -37,16 +37,40 @@
     }
   ],
   "skills": [
-    { "name": "React / Next.js", "level": 95 },
-    { "name": "TypeScript", "level": 90 },
-    { "name": "Node.js / Express", "level": 90 },
-    { "name": "PostgreSQL / MongoDB", "level": 85 },
-    { "name": "AWS / Cloud", "level": 80 },
-    { "name": "Docker / Kubernetes", "level": 75 },
-    { "name": "Git / GitHub", "level": 95 },
-    { "name": "REST APIs / GraphQL", "level": 90 }
+    {
+      "name": "React / Next.js",
+      "level": 95
+    },
+    {
+      "name": "TypeScript",
+      "level": 90
+    },
+    {
+      "name": "Node.js / Express",
+      "level": 90
+    },
+    {
+      "name": "PostgreSQL / MongoDB",
+      "level": 85
+    },
+    {
+      "name": "AWS / Cloud",
+      "level": 80
+    },
+    {
+      "name": "Docker / Kubernetes",
+      "level": 75
+    },
+    {
+      "name": "Git / GitHub",
+      "level": 95
+    },
+    {
+      "name": "REST APIs / GraphQL",
+      "level": 90
+    }
   ],
-  "logos": [],
   "socials": {},
+  "logos": [],
   "heroContent": {}
 }
