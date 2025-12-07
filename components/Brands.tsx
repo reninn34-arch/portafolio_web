@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Save, X, Upload } from 'lucide-react';
 import { syncToSupabase } from '../services/syncHelper';
+import { fetchPortfolioFromSupabase } from '../services/supabaseService';
 
 interface BrandsProps {
     isAdmin: boolean;
@@ -34,25 +35,38 @@ export const Brands: React.FC<BrandsProps> = ({ isAdmin }) => {
     const [editingBrand, setEditingBrand] = useState<string | null>(null);
     const [brandForm, setBrandForm] = useState<Brand>({ id: '', name: '', logo: '' });
 
-    // Load brands from localStorage
+    // Load brands from Supabase first, then localStorage
     useEffect(() => {
-        const savedBrands = localStorage.getItem('dev_portfolio_brands');
-        if (savedBrands) {
-            const parsed = JSON.parse(savedBrands);
-            // Use default brands if saved is empty
-            if (parsed && parsed.length > 0) {
-                setBrands(parsed);
-            } else {
-                setBrands(defaultBrands);
-                // Save defaults
-                localStorage.setItem('dev_portfolio_brands', JSON.stringify(defaultBrands));
-                syncToSupabase('dev_portfolio_brands', defaultBrands);
+        const loadBrands = async () => {
+            try {
+                const supabaseData = await fetchPortfolioFromSupabase();
+                if (supabaseData && supabaseData.brands && supabaseData.brands.length > 0) {
+                    console.log('✅ Cargando brands desde Supabase');
+                    setBrands(supabaseData.brands);
+                    return;
+                }
+            } catch (e) {
+                console.error("Error loading brands from Supabase", e);
             }
-        } else {
-            // Save defaults if nothing exists
+
+            // Fallback to localStorage
+            const savedBrands = localStorage.getItem('dev_portfolio_brands');
+            if (savedBrands) {
+                const parsed = JSON.parse(savedBrands);
+                if (parsed && parsed.length > 0) {
+                    console.log('⚠️ Cargando brands desde localStorage');
+                    setBrands(parsed);
+                    return;
+                }
+            }
+
+            // Use defaults if nothing else
+            console.log('ℹ️ Usando brands por defecto');
+            setBrands(defaultBrands);
             localStorage.setItem('dev_portfolio_brands', JSON.stringify(defaultBrands));
-            syncToSupabase('dev_portfolio_brands', defaultBrands);
-        }
+        };
+        
+        loadBrands();
     }, []);
 
     const saveBrands = async (newBrands: Brand[]) => {

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Trash2, Upload, Plus, AlertTriangle, ExternalLink } from 'lucide-react';
 import { LogoItem } from '../types';
 import { syncToSupabase } from '../services/syncHelper';
+import { fetchPortfolioFromSupabase } from '../services/supabaseService';
 
 interface LogoGalleryProps {
   isAdmin: boolean;
@@ -18,15 +19,31 @@ export const LogoGallery: React.FC<LogoGalleryProps> = ({ isAdmin }) => {
   const [newTitle, setNewTitle] = useState('');
   const [newLink, setNewLink] = useState('');
 
-  // Load from LocalStorage on mount
+  // Load from Supabase first, then localStorage
   useEffect(() => {
     const loadLogos = async () => {
-      // Try localStorage first
+      try {
+        // Try Supabase first
+        const supabaseData = await fetchPortfolioFromSupabase();
+        if (supabaseData && supabaseData.logos && supabaseData.logos.length > 0) {
+          console.log('✅ Cargando logos desde Supabase');
+          setLogos(supabaseData.logos.map((item) => ({
+            ...item,
+            link: item.link ? normalizeLink(item.link) : undefined,
+          })));
+          return;
+        }
+      } catch (e) {
+        console.error("Error loading from Supabase", e);
+      }
+      
+      // Fallback to localStorage
       const savedLogos = localStorage.getItem('dev_portfolio_logos');
       if (savedLogos) {
         try {
           const parsed: LogoItem[] = JSON.parse(savedLogos);
           if (parsed && parsed.length > 0) {
+            console.log('⚠️ Cargando logos desde localStorage');
             setLogos(parsed.map((item) => ({
               ...item,
               link: item.link ? normalizeLink(item.link) : undefined,
@@ -38,7 +55,8 @@ export const LogoGallery: React.FC<LogoGalleryProps> = ({ isAdmin }) => {
         }
       }
       
-      // If no logos, start with empty array
+      // No logos found anywhere
+      console.log('ℹ️ No hay logos guardados');
       setLogos([]);
     };
     

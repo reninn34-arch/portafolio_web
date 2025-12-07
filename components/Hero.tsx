@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowDown, Instagram, Linkedin, Mail, Youtube, PenSquare, X, Save, Camera, Image as ImageIcon, Edit } from 'lucide-react';
 import { syncToSupabase } from '../services/syncHelper';
+import { fetchPortfolioFromSupabase } from '../services/supabaseService';
 
 interface HeroProps {
   isAdmin: boolean;
@@ -53,14 +54,25 @@ export const Hero: React.FC<HeroProps> = ({ isAdmin }) => {
   const [tempHeroContent, setTempHeroContent] = useState<HeroContent>(heroContent);
   const [activeTab, setActiveTab] = useState<'content' | 'photo' | 'background'>('content');
 
-  // Load socials
+  // Load socials from Supabase first, then localStorage
   useEffect(() => {
-    const savedSocials = localStorage.getItem('dev_portfolio_socials');
-    if (savedSocials) {
-      setSocials(JSON.parse(savedSocials));
-    } else {
-      // Defaults (empty)
-    }
+    const loadSocials = async () => {
+      try {
+        const supabaseData = await fetchPortfolioFromSupabase();
+        if (supabaseData && supabaseData.socials) {
+          setSocials(supabaseData.socials);
+          return;
+        }
+      } catch (e) {
+        console.error("Error loading socials from Supabase", e);
+      }
+      
+      const savedSocials = localStorage.getItem('dev_portfolio_socials');
+      if (savedSocials) {
+        setSocials(JSON.parse(savedSocials));
+      }
+    };
+    loadSocials();
   }, []);
 
   const handleEditClick = () => {
@@ -79,40 +91,42 @@ export const Hero: React.FC<HeroProps> = ({ isAdmin }) => {
     setTempSocials(prev => ({ ...prev, [name]: value }));
   };
 
-  // Load hero content
+  // Load hero content from Supabase first, then localStorage
   useEffect(() => {
-    const savedHeroContent = localStorage.getItem('dev_portfolio_hero_content');
-    if (savedHeroContent) {
+    const loadHeroContent = async () => {
       try {
-        const parsed = JSON.parse(savedHeroContent);
-        // Merge saved data with defaults (defaults for missing fields)
-        const merged = { ...defaultHeroContent, ...parsed };
-        
-        // Always use default name if saved name is "Alex"
-        if (merged.name === 'Alex') {
-          merged.name = 'Erik';
+        const supabaseData = await fetchPortfolioFromSupabase();
+        if (supabaseData && supabaseData.heroContent && Object.keys(supabaseData.heroContent).length > 0) {
+          const merged = { ...defaultHeroContent, ...supabaseData.heroContent };
+          setHeroContent(merged);
+          setTempHeroContent(merged);
+          localStorage.setItem('dev_portfolio_hero_content', JSON.stringify(merged));
+          return;
         }
-        
-        // If description is empty or old default, use new default
-        if (!merged.description || merged.description.includes('arquitectura de software')) {
-          merged.description = defaultHeroContent.description;
-        }
-        
-        setHeroContent(merged);
-        
-        // Update localStorage with merged content
-        localStorage.setItem('dev_portfolio_hero_content', JSON.stringify(merged));
-        syncToSupabase('dev_portfolio_hero_content', merged);
       } catch (e) {
-        console.error('Error parsing hero content', e);
-        setHeroContent(defaultHeroContent);
+        console.error("Error loading hero content from Supabase", e);
       }
-    } else {
-      // Save default if nothing exists
-      setHeroContent(defaultHeroContent);
-      localStorage.setItem('dev_portfolio_hero_content', JSON.stringify(defaultHeroContent));
-      syncToSupabase('dev_portfolio_hero_content', defaultHeroContent);
-    }
+
+      // Fallback to localStorage
+      const savedHeroContent = localStorage.getItem('dev_portfolio_hero_content');
+      if (savedHeroContent) {
+        try {
+          const parsed = JSON.parse(savedHeroContent);
+          const merged = { ...defaultHeroContent, ...parsed };
+          setHeroContent(merged);
+          setTempHeroContent(merged);
+        } catch (e) {
+          console.error('Error parsing hero content', e);
+          setHeroContent(defaultHeroContent);
+          setTempHeroContent(defaultHeroContent);
+        }
+      } else {
+        setHeroContent(defaultHeroContent);
+        setTempHeroContent(defaultHeroContent);
+      }
+    };
+
+    loadHeroContent();
   }, []);
 
   // Hero content handlers
