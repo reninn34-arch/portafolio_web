@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, Unlock, X, Download, Upload, Cloud, Database } from 'lucide-react';
+import { Lock, Unlock, X, Download, Upload, Cloud, Database, RefreshCw } from 'lucide-react';
 import { Hero } from './components/Hero';
 import { Brands } from './components/Brands';
 import { LogoGallery } from './components/LogoGallery';
@@ -31,6 +31,21 @@ const App: React.FC = () => {
 
     // Load immediately without delay
     loadPortfolioData();
+
+    // Reload when page becomes visible (user switches back to tab)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('🔄 Página visible, recargando desde Supabase...');
+        loadPortfolioData();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   // Load portfolio data from Supabase or fallback sources
@@ -488,6 +503,16 @@ const App: React.FC = () => {
             </>
           )}
         </div>
+
+        {/* Sync Button - Always Visible */}
+        <button
+          onClick={handleLoadFromSupabase}
+          className="inline-flex items-center gap-2 text-xs text-slate-600 hover:text-green-500 transition-colors opacity-60 hover:opacity-100 p-2"
+          title="Sincronizar con base de datos"
+        >
+          <RefreshCw size={14} />
+          Sincronizar
+        </button>
 
         {/* Admin Toggle Button */}
         <button
