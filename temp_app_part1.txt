@@ -1,0 +1,254 @@
+﻿import React, { useState, useEffect } from 'react';
+import { Lock, Unlock, X, Download, Upload, Cloud, Database } from 'lucide-react';
+import { Hero } from './components/Hero';
+import { Brands } from './components/Brands';
+import { LogoGallery } from './components/LogoGallery';
+import { Resume } from './components/Resume';
+import { FloatingWhatsApp } from './components/FloatingWhatsApp';
+import { Experience, Education, Skill } from './types';
+import { fetchPortfolioDataFromGitHub, savePortfolioDataToGitHub } from './services/githubService';
+import { fetchPortfolioFromSupabase, savePortfolioToSupabase, initializePortfolio } from './services/supabaseService';
+
+const App: React.FC = () => {
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [githubToken, setGithubToken] = useState('');
+  const [showTokenModal, setShowTokenModal] = useState(false);
+
+  // Check admin session and load data from Supabase on mount
+  useEffect(() => {
+    const adminSession = sessionStorage.getItem('isAdmin');
+    if (adminSession === 'true') {
+      setIsAdmin(true);
+    }
+
+    const savedToken = localStorage.getItem('github_token');
+    if (savedToken) {
+      setGithubToken(savedToken);
+    }
+
+    // Load immediately without delay
+    loadPortfolioData();
+  }, []);
+
+  // Load portfolio data from Supabase or fallback sources
+  const loadPortfolioData = async () => {
+    // First, load from localStorage immediately (no delay)
+    const localExp = localStorage.getItem('dev_portfolio_experiences');
+    const localEdu = localStorage.getItem('dev_portfolio_education');
+    const localSkills = localStorage.getItem('dev_portfolio_skills');
+    
+    // If localStorage has data, use it immediately
+    if (localExp && localEdu && localSkills) {
+      setExperiences(JSON.parse(localExp));
+      setEducation(JSON.parse(localEdu));
+      setSkills(JSON.parse(localSkills));
+    } else {
+      // If no localStorage, use defaults immediately
+      setExperiences(defaultExperiences);
+      setEducation(defaultEducation);
+      setSkills(defaultSkills);
+      
+      // Save defaults to localStorage
+      localStorage.setItem('dev_portfolio_experiences', JSON.stringify(defaultExperiences));
+      localStorage.setItem('dev_portfolio_education', JSON.stringify(defaultEducation));
+      localStorage.setItem('dev_portfolio_skills', JSON.stringify(defaultSkills));
+    }
+    
+    // Then sync with Supabase in background
+    try {
+      // Try Supabase
+      const supabaseData = await fetchPortfolioFromSupabase();
+      
+      if (supabaseData) {
+        console.log('âœ… Sincronizando con Supabase');
+        
+        // Use Supabase data if it has content, otherwise keep what we loaded
+        const experiences = (supabaseData.experiences && supabaseData.experiences.length > 0) 
+          ? supabaseData.experiences 
+          : (localExp ? JSON.parse(localExp) : defaultExperiences);
+        const education = (supabaseData.education && supabaseData.education.length > 0) 
+          ? supabaseData.education 
+          : (localEdu ? JSON.parse(localEdu) : defaultEducation);
+        const skills = (supabaseData.skills && supabaseData.skills.length > 0) 
+          ? supabaseData.skills 
+          : (localSkills ? JSON.parse(localSkills) : defaultSkills);
+        
+        // Only update state if Supabase has different/better data
+        if (JSON.stringify(experiences) !== JSON.stringify(localExp ? JSON.parse(localExp) : defaultExperiences)) {
+          setExperiences(experiences);
+        }
+        if (JSON.stringify(education) !== JSON.stringify(localEdu ? JSON.parse(localEdu) : defaultEducation)) {
+          setEducation(education);
+        }
+        if (JSON.stringify(skills) !== JSON.stringify(localSkills ? JSON.parse(localSkills) : defaultSkills)) {
+          setSkills(skills);
+        }
+        
+        // If Supabase is empty, save our defaults to it
+        if ((!supabaseData.experiences || supabaseData.experiences.length === 0) && 
+            (!supabaseData.education || supabaseData.education.length === 0)) {
+          console.log('âš ï¸ Inicializando Supabase con datos por defecto');
+          await savePortfolioToSupabase({
+            experiences: defaultExperiences,
+            education: defaultEducation,
+            skills: defaultSkills,
+            socials: supabaseData.socials || {},
+            logos: supabaseData.logos || [],
+            brands: supabaseData.brands || [],
+            heroContent: supabaseData.heroContent || {},
+            whatsapp: supabaseData.whatsapp || '',
+            pdfData: supabaseData.pdfData || ''
+          });
+        }
+        
+        // Update localStorage cache - only if Supabase has newer/valid data
+        localStorage.setItem('dev_portfolio_experiences', JSON.stringify(experiences));
+        localStorage.setItem('dev_portfolio_education', JSON.stringify(education));
+        localStorage.setItem('dev_portfolio_skills', JSON.stringify(skills));
+        
+        // Only update these if they have content, otherwise preserve what's already in localStorage
+        if (supabaseData.socials && Object.keys(supabaseData.socials).length > 0) {
+          localStorage.setItem('dev_portfolio_socials', JSON.stringify(supabaseData.socials));
+        }
+        if (supabaseData.logos && supabaseData.logos.length > 0) {
+          localStorage.setItem('dev_portfolio_logos', JSON.stringify(supabaseData.logos));
+        }
+        if (supabaseData.brands && supabaseData.brands.length > 0) {
+          localStorage.setItem('dev_portfolio_brands', JSON.stringify(supabaseData.brands));
+        }
+        if (supabaseData.heroContent && Object.keys(supabaseData.heroContent).length > 0) {
+          localStorage.setItem('dev_portfolio_hero_content', JSON.stringify(supabaseData.heroContent));
+        }
+        if (supabaseData.whatsapp) {
+          localStorage.setItem('dev_portfolio_whatsapp', supabaseData.whatsapp);
+        }
+        if (supabaseData.pdfData) {
+          localStorage.setItem('dev_portfolio_resume_pdf', supabaseData.pdfData);
+        }
+        return;
+      }
+    } catch (error) {
+      console.error('Error loading from Supabase:', error);
+    }
+
+    // Fallback to GitHub JSON
+    try {
+      const githubData = await fetchPortfolioDataFromGitHub();
+      if (githubData) {
+        console.log('âš ï¸ Cargando desde GitHub (Supabase no disponible)');
+        setExperiences(githubData.experiences || defaultExperiences);
+        setEducation(githubData.education || defaultEducation);
+        setSkills(githubData.skills || defaultSkills);
+        
+        // Update localStorage
+        localStorage.setItem('dev_portfolio_experiences', JSON.stringify(githubData.experiences || []));
+        localStorage.setItem('dev_portfolio_education', JSON.stringify(githubData.education || []));
+        localStorage.setItem('dev_portfolio_skills', JSON.stringify(githubData.skills || []));
+        localStorage.setItem('dev_portfolio_socials', JSON.stringify(githubData.socials || {}));
+        localStorage.setItem('dev_portfolio_logos', JSON.stringify(githubData.logos || []));
+        localStorage.setItem('dev_portfolio_hero_content', JSON.stringify(githubData.heroContent || {}));
+        return;
+      }
+    } catch (error) {
+      console.error('Error loading from GitHub:', error);
+    }
+
+    // Final fallback to localStorage
+    console.log('âš ï¸ Usando datos locales');
+    const savedExp = localStorage.getItem('dev_portfolio_experiences');
+    const savedEdu = localStorage.getItem('dev_portfolio_education');
+    const savedSkills = localStorage.getItem('dev_portfolio_skills');
+    
+    if (savedExp) setExperiences(JSON.parse(savedExp));
+    if (savedEdu) setEducation(JSON.parse(savedEdu));
+    if (savedSkills) setSkills(JSON.parse(savedSkills));
+  };
+
+  const handleLockClick = () => {
+    if (isAdmin) {
+      setIsAdmin(false);
+      sessionStorage.removeItem('isAdmin');
+    } else {
+      setShowLoginModal(true);
+      setLoginError('');
+      setPasswordInput('');
+    }
+  };
+
+  const handleLoginSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Normalize input: remove spaces and convert to lowercase for better UX
+    const normalizedInput = passwordInput.trim().toLowerCase();
+
+    if (normalizedInput === "admin") {
+      setIsAdmin(true);
+      sessionStorage.setItem('isAdmin', 'true');
+      setShowLoginModal(false);
+    } else {
+      setLoginError('ContraseÃ±a incorrecta. Intenta con: admin');
+    }
+  };
+
+  // Developer's Resume Data - Default values
+  const defaultExperiences: Experience[] = [
+    {
+      id: '1',
+      role: 'Full Stack Developer',
+      company: 'Freelance / Proyectos Propios',
+      period: 'Oct 2025 - Presente',
+      description: 'Desarrollo de aplicaciones web completas con React 18 y TypeScript. ImplementaciÃ³n de sistema de administraciÃ³n e-commerce con Material-UI, Prisma ORM y PostgreSQL. IntegraciÃ³n de Supabase para backend as a service. GestiÃ³n de estado con React Hooks y formularios con Formik + Yup. VisualizaciÃ³n de datos con Chart.js.'
+    },
+    {
+      id: '2',
+      role: 'Frontend Developer',
+      company: 'Proyectos Web',
+      period: 'Oct 2025 - Nov 2025',
+      description: 'Desarrollo de landing pages modernas y responsivas con HTML5, CSS3 y diseÃ±o adaptativo. ImplementaciÃ³n de pÃ¡ginas de marketing con animaciones y efectos visuales. OptimizaciÃ³n de performance y SEO tÃ©cnico. Despliegue en GitHub Pages con versionamiento Git.'
+    },
+    {
+      id: '3',
+      role: 'React Developer',
+      company: 'Aplicaciones SaaS',
+      period: 'Nov 2025',
+      description: 'ConstrucciÃ³n de portafolio profesional interactivo con React, TypeScript y Vite. IntegraciÃ³n de IA con Google Gemini API para chatbot asistente. Sistema de autenticaciÃ³n admin y gestiÃ³n de contenido dinÃ¡mico. SincronizaciÃ³n automÃ¡tica con Supabase y GitHub como respaldo. ImplementaciÃ³n de WhatsApp widget y carga de CV en PDF.'
+    }
+  ];
+
+  const defaultEducation: Education[] = [
+    {
+      id: '1',
+      degree: 'Desarrollo Full Stack con TypeScript',
+      institution: 'Proyectos PrÃ¡cticos / GitHub',
+      year: '2025'
+    },
+    {
+      id: '2',
+      degree: 'React & Modern Web Development',
+      institution: 'Autoaprendizaje / DocumentaciÃ³n Oficial',
+      year: '2025'
+    },
+    {
+      id: '3',
+      degree: 'Base de Datos y Backend Development',
+      institution: 'Prisma, PostgreSQL, Supabase',
+      year: '2025'
+    }
+  ];
+
+  const defaultSkills: Skill[] = [
+    { name: 'React / TypeScript', level: 90 },
+    { name: 'Vite / Build Tools', level: 85 },
+    { name: 'Material-UI / Styling', level: 85 },
+    { name: 'Supabase / Backend', level: 80 },
+    { name: 'PostgreSQL / Prisma', level: 80 },
+    { name: 'Git / GitHub', level: 90 },
+    { name: 'HTML5 / CSS3', level: 95 },
+    { name: 'REST APIs / Integration', level: 85 },
+    { name: 'Formik / Form Management', level: 80 },
+    { name: 'Chart.js / Data Viz', level: 75 },
+    { name: 'Google Gemini AI', level: 70 },
+    { name: 'Responsive Design', level: 90 }
+  ];

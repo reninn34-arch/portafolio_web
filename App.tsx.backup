@@ -35,70 +35,136 @@ const App: React.FC = () => {
 
   // Load portfolio data from Supabase or fallback sources
   const loadPortfolioData = async () => {
-    try {
-      // Try Supabase FIRST
-      const supabaseData = await fetchPortfolioFromSupabase();
-      
-      if (supabaseData && supabaseData.experiences && supabaseData.experiences.length > 0) {
-        // Supabase has data - use it
-        console.log('✅ Cargando desde Supabase');
-        setExperiences(supabaseData.experiences || defaultExperiences);
-        setEducation(supabaseData.education || defaultEducation);
-        setSkills(supabaseData.skills || defaultSkills);
-        
-        // Update localStorage as cache
-        localStorage.setItem('dev_portfolio_experiences', JSON.stringify(supabaseData.experiences || defaultExperiences));
-        localStorage.setItem('dev_portfolio_education', JSON.stringify(supabaseData.education || defaultEducation));
-        localStorage.setItem('dev_portfolio_skills', JSON.stringify(supabaseData.skills || defaultSkills));
-        return;
-      }
-      
-      // Supabase is empty - try localStorage
-      const localExp = localStorage.getItem('dev_portfolio_experiences');
-      const localEdu = localStorage.getItem('dev_portfolio_education');
-      const localSkills = localStorage.getItem('dev_portfolio_skills');
-      
-      if (localExp && localEdu && localSkills) {
-        console.log('⚠️ Supabase vacío, usando localStorage');
-        setExperiences(JSON.parse(localExp));
-        setEducation(JSON.parse(localEdu));
-        setSkills(JSON.parse(localSkills));
-        return;
-      }
-      
-      // Both Supabase and localStorage are empty - use defaults
-      console.log('⚠️ Sin datos guardados, usando ejemplos');
+    // First, load from localStorage immediately (no delay)
+    const localExp = localStorage.getItem('dev_portfolio_experiences');
+    const localEdu = localStorage.getItem('dev_portfolio_education');
+    const localSkills = localStorage.getItem('dev_portfolio_skills');
+    
+    // If localStorage has data, use it immediately
+    if (localExp && localEdu && localSkills) {
+      setExperiences(JSON.parse(localExp));
+      setEducation(JSON.parse(localEdu));
+      setSkills(JSON.parse(localSkills));
+    } else {
+      // If no localStorage, use defaults immediately
       setExperiences(defaultExperiences);
       setEducation(defaultEducation);
       setSkills(defaultSkills);
       
-      // Only save defaults if we're in admin mode
-      if (sessionStorage.getItem('isAdmin') === 'true') {
+      // Save defaults to localStorage
+      localStorage.setItem('dev_portfolio_experiences', JSON.stringify(defaultExperiences));
+      localStorage.setItem('dev_portfolio_education', JSON.stringify(defaultEducation));
+      localStorage.setItem('dev_portfolio_skills', JSON.stringify(defaultSkills));
+    }
+    
+    // Then sync with Supabase in background
+    try {
+      // Try Supabase
+      const supabaseData = await fetchPortfolioFromSupabase();
+      
+      if (supabaseData) {
+        console.log('✅ Sincronizando con Supabase');
+        
+        // Use Supabase data if it has content, otherwise keep what we loaded
+        const experiences = (supabaseData.experiences && supabaseData.experiences.length > 0) 
+          ? supabaseData.experiences 
+          : (localExp ? JSON.parse(localExp) : defaultExperiences);
+        const education = (supabaseData.education && supabaseData.education.length > 0) 
+          ? supabaseData.education 
+          : (localEdu ? JSON.parse(localEdu) : defaultEducation);
+        const skills = (supabaseData.skills && supabaseData.skills.length > 0) 
+          ? supabaseData.skills 
+          : (localSkills ? JSON.parse(localSkills) : defaultSkills);
+        
+        // Only update state if Supabase has different/better data
+        if (JSON.stringify(experiences) !== JSON.stringify(localExp ? JSON.parse(localExp) : defaultExperiences)) {
           setExperiences(experiences);
         }
         if (JSON.stringify(education) !== JSON.stringify(localEdu ? JSON.parse(localEdu) : defaultEducation)) {
-        localStorage.setItem('dev_portfolio_experiences', JSON.stringify(defaultExperiences));
-        localStorage.setItem('dev_portfolio_education', JSON.stringify(defaultEducation));
-        localStorage.setItem('dev_portfolio_skills', JSON.stringify(defaultSkills));
+          setEducation(education);
+        }
+        if (JSON.stringify(skills) !== JSON.stringify(localSkills ? JSON.parse(localSkills) : defaultSkills)) {
+          setSkills(skills);
+        }
+        
+        // If Supabase is empty, save our defaults to it
+        if ((!supabaseData.experiences || supabaseData.experiences.length === 0) && 
+            (!supabaseData.education || supabaseData.education.length === 0)) {
+          console.log('⚠️ Inicializando Supabase con datos por defecto');
+          await savePortfolioToSupabase({
+            experiences: defaultExperiences,
+            education: defaultEducation,
+            skills: defaultSkills,
+            socials: supabaseData.socials || {},
+            logos: supabaseData.logos || [],
+            brands: supabaseData.brands || [],
+            heroContent: supabaseData.heroContent || {},
+            whatsapp: supabaseData.whatsapp || '',
+            pdfData: supabaseData.pdfData || ''
+          });
+        }
+        
+        // Update localStorage cache - only if Supabase has newer/valid data
+        localStorage.setItem('dev_portfolio_experiences', JSON.stringify(experiences));
+        localStorage.setItem('dev_portfolio_education', JSON.stringify(education));
+        localStorage.setItem('dev_portfolio_skills', JSON.stringify(skills));
+        
+        // Only update these if they have content, otherwise preserve what's already in localStorage
+        if (supabaseData.socials && Object.keys(supabaseData.socials).length > 0) {
+          localStorage.setItem('dev_portfolio_socials', JSON.stringify(supabaseData.socials));
+        }
+        if (supabaseData.logos && supabaseData.logos.length > 0) {
+          localStorage.setItem('dev_portfolio_logos', JSON.stringify(supabaseData.logos));
+        }
+        if (supabaseData.brands && supabaseData.brands.length > 0) {
+          localStorage.setItem('dev_portfolio_brands', JSON.stringify(supabaseData.brands));
+        }
+        if (supabaseData.heroContent && Object.keys(supabaseData.heroContent).length > 0) {
+          localStorage.setItem('dev_portfolio_hero_content', JSON.stringify(supabaseData.heroContent));
+        }
+        if (supabaseData.whatsapp) {
+          localStorage.setItem('dev_portfolio_whatsapp', supabaseData.whatsapp);
+        }
+        if (supabaseData.pdfData) {
+          localStorage.setItem('dev_portfolio_resume_pdf', supabaseData.pdfData);
+        }
+        return;
       }
-      
     } catch (error) {
       console.error('Error loading from Supabase:', error);
-      
-      // Fallback to localStorage
-      const localExp = localStorage.getItem('dev_portfolio_experiences');
-      const localEdu = localStorage.getItem('dev_portfolio_education');
-      const localSkills = localStorage.getItem('dev_portfolio_skills');
-      
-      if (localExp) setExperiences(JSON.parse(localExp));
-      else setExperiences(defaultExperiences);
-      
-      if (localEdu) setEducation(JSON.parse(localEdu));
-      else setEducation(defaultEducation);
-      
-      if (localSkills) setSkills(JSON.parse(localSkills));
-      else setSkills(defaultSkills);
     }
+
+    // Fallback to GitHub JSON
+    try {
+      const githubData = await fetchPortfolioDataFromGitHub();
+      if (githubData) {
+        console.log('⚠️ Cargando desde GitHub (Supabase no disponible)');
+        setExperiences(githubData.experiences || defaultExperiences);
+        setEducation(githubData.education || defaultEducation);
+        setSkills(githubData.skills || defaultSkills);
+        
+        // Update localStorage
+        localStorage.setItem('dev_portfolio_experiences', JSON.stringify(githubData.experiences || []));
+        localStorage.setItem('dev_portfolio_education', JSON.stringify(githubData.education || []));
+        localStorage.setItem('dev_portfolio_skills', JSON.stringify(githubData.skills || []));
+        localStorage.setItem('dev_portfolio_socials', JSON.stringify(githubData.socials || {}));
+        localStorage.setItem('dev_portfolio_logos', JSON.stringify(githubData.logos || []));
+        localStorage.setItem('dev_portfolio_hero_content', JSON.stringify(githubData.heroContent || {}));
+        return;
+      }
+    } catch (error) {
+      console.error('Error loading from GitHub:', error);
+    }
+
+    // Final fallback to localStorage
+    console.log('⚠️ Usando datos locales');
+    const savedExp = localStorage.getItem('dev_portfolio_experiences');
+    const savedEdu = localStorage.getItem('dev_portfolio_education');
+    const savedSkills = localStorage.getItem('dev_portfolio_skills');
+    
+    if (savedExp) setExperiences(JSON.parse(savedExp));
+    if (savedEdu) setEducation(JSON.parse(savedEdu));
+    if (savedSkills) setSkills(JSON.parse(savedSkills));
   };
 
   const handleLockClick = () => {
